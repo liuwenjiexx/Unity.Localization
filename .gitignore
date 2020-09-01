@@ -1,0 +1,12 @@
+.vs/
+/Library/
+/Temp/
+/*.sln
+/*.csproj
+gen/
+/ProjectSettings/ProjectVersion.txt
+/ProjectSettings/
+/UserSettings/
+/obj/
+/Packages/manifest.json
+/Logs/
