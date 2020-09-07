@@ -41,6 +41,7 @@ namespace UnityEditor.Localizations
                 return editorLocalizationValues;
             }
         }
+
         //2020/9/1
         private static string GetPackageDirectory(string packageName)
         {
@@ -57,9 +58,8 @@ namespace UnityEditor.Localizations
                 }
             }
 
-            foreach(var pkgPath in Directory.GetFiles("Assets", "package.json", SearchOption.AllDirectories))
+            foreach (var pkgPath in Directory.GetFiles("Assets", "package.json", SearchOption.AllDirectories))
             {
-
                 try
                 {
                     if (JsonUtility.FromJson<UnityPackage>(File.ReadAllText(pkgPath, System.Text.Encoding.UTF8)).name == packageName)

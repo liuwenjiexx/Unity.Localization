@@ -4,7 +4,13 @@
 
 
 
+## 预览
 
+![](README/Localization.PNG)
+
+
+
+![](README/Localization-Text.PNG)
 
 ## ﻿菜单
 
