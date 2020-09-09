@@ -36,7 +36,10 @@ namespace UnityEngine.Localizations
             IDictionary<string, LocalizationValue> content = null;
             TextAsset txt = Resources.Load<TextAsset>(ResourcesPath + "/" + lang + ".lang");
             if (txt == null)
+            {
+                //Debug.LogError("not found lang: " + lang);
                 return null;
+            }
             content = new Dictionary<string, LocalizationValue>();
             Localization.LoadFromXml(txt.text, content);
             return content;

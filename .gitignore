@@ -8,5 +8,5 @@ gen/
 /ProjectSettings/
 /UserSettings/
 /obj/
-/Packages/manifest.json
 /Logs/
+/Packages/packages-lock.json

@@ -220,7 +220,7 @@ namespace UnityEngine.Localizations
             Default.Initialize();
 
             if (!Application.isEditor)
-                Debug.Log($"Initalized Lang <{Lang}> LangNames <{LangNames.Count}> systemLanguage <{ Application.systemLanguage}> Thread CurrentCulture <{Thread.CurrentThread.CurrentCulture.Name}>");
+                Debug.Log($"Initalized Default <{Default}> Lang <{Lang}> LangNames <{LangNames.Count}> systemLanguage <{ Application.systemLanguage}> Thread CurrentCulture <{Thread.CurrentThread.CurrentCulture.Name}>");
         }
 
         public static void LoadLang(string lang)

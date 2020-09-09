@@ -49,6 +49,7 @@ namespace UnityEngine.Localizations
                 }
             }
             langNames.Sort(StringComparer.Ordinal);
+            LoadLang(Localization.Lang);
             Localization.All.Add(this);
         }
 
