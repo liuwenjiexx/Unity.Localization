@@ -102,12 +102,11 @@ namespace UnityEditor.Localizations
                         EditorGUILayout.HelpBox(string.Format(editorLocalization.GetString("MissingKeyError"), key), MessageType.Error);
                     }
 
-                    using (new GUILayout.HorizontalScope())
-                    {
-                        EditorGUILayout.PrefixLabel(editorLocalization.GetString( "Format"));
-                        formatPropery.stringValue = EditorGUILayout.TextArea(formatPropery.stringValue, GUILayout.Height(30));
-
-                    }
+                    //using (new GUILayout.HorizontalScope())
+                    //{
+                    //    EditorGUILayout.PrefixLabel(editorLocalization.GetString( "Format"));
+                    //    formatPropery.stringValue = EditorGUILayout.TextArea(formatPropery.stringValue, GUILayout.Height(30));
+                    //}
                     if (checker.changed)
                     {
                         serializedObject.ApplyModifiedProperties();

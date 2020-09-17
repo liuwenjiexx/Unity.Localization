@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<localization xmlns="urn:schema-localization">
+  <string key="Language">語言</string>
+  <string key="Source">Resources-zh-TW</string>
+</localization>

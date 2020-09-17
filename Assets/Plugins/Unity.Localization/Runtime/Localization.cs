@@ -15,6 +15,7 @@ namespace UnityEngine.Localizations
     public class Localization : MonoBehaviour
     {
         public string key;
+        [HideInInspector]
         [TextArea]
         public string format;
         private bool isDiried;

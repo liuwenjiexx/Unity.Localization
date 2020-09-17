@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<localization xmlns="urn:schema-localization">
+  <string key="Hello World">Hello World</string>
+  <string key="Language">Language</string>
+  <string key="Source">Resources-en</string>
+</localization>
