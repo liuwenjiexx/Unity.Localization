@@ -14,7 +14,7 @@
     "com.unity.timeline": "1.2.15",
     "com.unity.ugui": "1.0.0",
     "com.unity.xr.legacyinputhelpers": "2.1.4",
-    "unity.guiextensions": "https://github.com/liuwenjiexx/Unity.GuiExtensions.git?path=/Assets",
+    "unity.guiextensions": "https://github.com/liuwenjiexx/Unity.GuiExtensions.git",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
     "com.unity.modules.animation": "1.0.0",
