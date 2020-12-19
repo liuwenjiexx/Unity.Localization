@@ -1,5 +1,17 @@
 # Unity Localization
 
+本地化
+
+
+
+## manifest.json
+
+
+   ```
+"unity.guiextensions": "https://github.com/liuwenjiexx/Unity.GuiExtensions.git",
+"unity.localization": "https://github.com/liuwenjiexx/Unity.Localization.git?path=/Assets/Plugins/Unity.Localization",
+   ```
+
 
 
 ## 预览
@@ -12,22 +24,10 @@
 
 
 
-## Packages
-
-
-   ```
-"unity.localization": "https://github.com/liuwenjiexx/Unity.Localization.git?path=/Assets/Plugins/Unity.Localization"
-   ```
-
-```
-"unity.guiextensions": "https://github.com/liuwenjiexx/Unity.GuiExtensions.git?path=/Assets"
-```
 
 
 
 ## 快速使用
-
-
 
 2. 打开Unity 双击 `Assets/Example/ResourcesLoad/Localization/*.lang.xml` 
 

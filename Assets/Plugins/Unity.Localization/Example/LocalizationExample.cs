@@ -1,63 +1,14 @@
-﻿//***** 运行该例子，请取消该注释 *****
-//#define TEST_CUSTOM 
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Localizations;
 using UnityEngine.UI;
 
-namespace UnityEngine.Localizations
+namespace UnityEngine.Localizations.Example
 {
-    
-#if TEST_CUSTOM
 
-    /// <summary>
-    /// 定制数据源
-    /// </summary>
-    class DataLocalizationValues : DefaultLocalizationValues
-    {
-
-        protected override IEnumerable<string> LoadNames()
-        {
-            return new string[] { "en", "zh", "zh-TW" };
-        }
-
-        protected override IDictionary<string, LocalizationValue> LoadValues(string lang)
-        {
-            IDictionary<string, LocalizationValue> result = null;
-            switch (lang)
-            {
-                case "zh":
-                    result = LocalizationValue.StringDictionary(new Dictionary<string, string>()
-                        {
-                            {"Source","Custom-zh" },
-                            {"Hello World","你好世界"},
-                            {"Language","语言"  }
-                        });
-                    break;
-                case "en":
-                    result = LocalizationValue.StringDictionary(new Dictionary<string, string>()
-                        {
-                            {"Source","Custom-en" },
-                            {"Hello World","Hello World" },
-                            {"Language","Language" }
-                        });
-                    break;
-                case "zh-TW":
-                    result = LocalizationValue.StringDictionary(new Dictionary<string, string>() {
-                            {"Source","Custom-zh-TW" },
-                        { "Language", "語言" }
-                    });
-                    break;
-            }
-            return result;
-        }
-    }
-
-#endif
-
-    public class CustomLoad : MonoBehaviour
+    public class LocalizationExample : MonoBehaviour
     {
         public Dropdown listLanguage;
         public Text text;
@@ -73,14 +24,46 @@ namespace UnityEngine.Localizations
         };
 
 
+        class DataLocalizationValues : DefaultLocalizationValues
+        {
+
+            protected override IEnumerable<string> LoadNames()
+            {
+                return langs.Keys;
+            }
+
+            protected override IDictionary<string, LocalizationValue> LoadValues(string lang)
+            {
+                IDictionary<string, LocalizationValue> result = null;
+                switch (lang)
+                {
+                    case "zh":
+                        result = LocalizationValue.StringDictionary(new Dictionary<string, string>()
+                        {
+                            {"Hello World","你好世界"},
+                            {"Language","语言"  }
+                        });
+                        break;
+                    case "en":
+                        result = LocalizationValue.StringDictionary(new Dictionary<string, string>()
+                        {
+                            {"Hello World","Hello World" },
+                            {"Language","Language" }
+                        });
+                        break;
+                    case "zh-TW":
+                        result = LocalizationValue.StringDictionary(new Dictionary<string, string>() {
+                        { "Language", "語言" }
+                    });
+                        break;
+                }
+                return result;
+            }
+        }
+
         // Start is called before the first frame update
         void Start()
         {
-
-#if !TEST_CUSTOM
-            throw new System.Exception("not define '#define TEST_CUSTOM'");
-#endif
-
             //初始化
             Localization.Initialize();
 

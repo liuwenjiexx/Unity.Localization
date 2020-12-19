@@ -10,3 +10,4 @@ gen/
 /obj/
 /Logs/
 /Packages/packages-lock.json
+.vsconfig
