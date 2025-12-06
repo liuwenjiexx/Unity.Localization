@@ -126,10 +126,14 @@ namespace UnityEngine.Localizations
                          break;
                      }*/
 
-                    Type loaderType = LocalizationSettings.LoaderType;
-                    if (loaderType == null && !string.IsNullOrEmpty(LocalizationSettings.LoaderTypeName))
+                    Type loaderType = LocalizationSettings.CustomLoaderType;
+                    if (loaderType != null)
                     {
-                        Debug.LogError("Localization Not found type: " + LocalizationSettings.LoaderTypeName);
+                        loader = Activator.CreateInstance(loaderType) as ILocalizationLoader;
+                    }
+                    else if (!string.IsNullOrEmpty(LocalizationSettings.CustomLoaderTypeName))
+                    {
+                        Debug.LogError("Localization Not found type: " + LocalizationSettings.CustomLoaderTypeName);
                     }
                     if (loader == null && !string.IsNullOrEmpty(LocalizationSettings.ResourcesPath))
                         loader = new ResourcesLocalizationLoader(LocalizationSettings.ResourcesPath);

@@ -1,7 +1,7 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <ui:VisualElement style="flex-grow: 1;">
         <ui:VisualElement style="flex-grow: 1;">
-            <ui:TextField label="Loader Type" name="loader_type" />
+            <ui:TextField label="Custom Loader Type" name="loader_type" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

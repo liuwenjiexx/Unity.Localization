@@ -11,6 +11,6 @@
   "category": "Unity",
   "description": "Localization, Multi Language",
   "dependencies": {
-    "unity.guiextensions": "0.0.1"
+    "com.unity.settings": "0.0.7"
   }
 }

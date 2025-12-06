@@ -7,7 +7,7 @@
             "key": "LoaderType",
             "platform": "Default",
             "variant": "",
-            "value": "{\"value\":{\"typeName\":\"UnityEngine.Localizations.LocalizationDataLoader\"}}"
+            "value": "{\"value\":{\"typeName\":\"\"}}"
         }
     ],
     "package": "unity.localization"

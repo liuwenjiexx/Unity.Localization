@@ -15,53 +15,52 @@ public class LocalizationSettings
 
     public static string PackageName => SettingsManagement.SettingsUtility.GetPackageName(typeof(LocalizationSettings).Assembly);
 
-    private static Setting<SerializableType> loaderType = new(Settings, nameof(LoaderType), null, SettingsScope.RuntimeProject);
+    private static Setting<SerializableType> customLoaderType = new(Settings, nameof(CustomLoaderType), null, SettingsScope.RuntimeProject);
 
-    static SerializableType LoaderTypeSetting
+    static SerializableType CustomLoaderTypeSetting
     {
         get
         {
-            SerializableType type = loaderType.Value;
+            SerializableType type = customLoaderType.Value;
             if (type == null)
             {
                 type = new SerializableType();
-                loaderType.Value = type;
+                customLoaderType.Value = type;
             }
 
             return type;
         }
     }
 
-    public static Type LoaderType
+    public static Type CustomLoaderType
     {
         get
         {
 
-            return LoaderTypeSetting.Type;
+            return CustomLoaderTypeSetting.Type;
         }
         set
         {
-            if (LoaderType != value)
+            if (CustomLoaderType != value)
             {
-                LoaderTypeSetting.Type = value;
-                loaderType.SetValue(LoaderTypeSetting, true);
+                CustomLoaderTypeSetting.Type = value;
+                customLoaderType.SetValue(CustomLoaderTypeSetting, true);
             }
         }
     }
 
-    public static string LoaderTypeName
+    public static string CustomLoaderTypeName
     {
         get
         {
-            return LoaderTypeSetting.TypeName;
+            return CustomLoaderTypeSetting.TypeName;
         }
         set
         {
-            if (LoaderTypeName != value)
+            if (CustomLoaderTypeName != value)
             {
-                LoaderTypeSetting.TypeName = value;
-                //loaderType.SetValue(LoaderTypeSetting, true);
-                loaderType.SetDiry();
+                CustomLoaderTypeSetting.TypeName = value; 
+                customLoaderType.SetDiry();
             }
         }
     }

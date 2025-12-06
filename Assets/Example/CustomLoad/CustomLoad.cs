@@ -1,5 +1,4 @@
-﻿//***** 运行该例子，请取消该注释 *****
-#define TEST_CUSTOM 
+﻿
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,11 +10,12 @@ using UnityEngine.UI;
 namespace UnityEngine.Localizations
 {
 
-#if TEST_CUSTOM
+
 
     /// <summary>
     /// 定制数据源
-    /// Project Settings/Tool/Localization/LoaderType = UnityEngine.Localizations.LocalizationDataLoader 
+    /// 运行该例子，请配置
+    /// [Project Settings/Tool/Localization/Custom Loader Type] = UnityEngine.Localizations.LocalizationDataLoader, Assembly-CSharp
     /// </summary>
     class LocalizationDataLoader : ILocalizationLoader
     {
@@ -65,7 +65,7 @@ namespace UnityEngine.Localizations
         }
     }
 
-#endif
+
 
 
     public class CustomLoad : MonoBehaviour
@@ -83,31 +83,12 @@ namespace UnityEngine.Localizations
               {"zh-TW","正體字" }
         };
 
-        static LocalizationDataLoader dataLocalizationValues = new LocalizationDataLoader();
-
-        //#if UNITY_EDITOR
-        //        [InitializeOnLoadMethod]
-        //        static void InitializeOnLoadMethod()
-        //        {
-        //            Localization.Default = dataLocalizationValues;
-        //            Debug.Log("InitializeOnLoadMethod");
-        //        }
-        //#endif
-
-        //[RuntimeInitializeOnLoadMethod]
-        //static void RuntimeInitializeOnLoadMethod()
-        //{
-        //    Localization.Default = dataLocalizationValues;
-        //    Debug.Log("RuntimeInitializeOnLoadMethod");
-        //}
-
+     
         // Start is called before the first frame update
         void Start()
         {
+            //Debug.Log(typeof(LocalizationDataLoader).AssemblyQualifiedName);
 
-#if !TEST_CUSTOM
-            throw new System.Exception("not define '#define TEST_CUSTOM'");
-#endif
 
             //初始化
             Localization.Initialize();

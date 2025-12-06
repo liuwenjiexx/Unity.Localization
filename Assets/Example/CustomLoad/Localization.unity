@@ -575,7 +575,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Hello World
+  m_Text: "\u4F60\u597D\u4E16\u754C"
 --- !u!114 &466338869
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1010,7 +1010,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Language
+  m_Text: "\u8A9E\u8A00"
 --- !u!222 &752780416
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1806,7 +1806,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Resources-en
+  m_Text: Custom-zh-TW
 --- !u!114 &1363320448
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3040,7 +3040,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7347244669786836350, guid: 7eee4977f4225b740a1f4e38ce97c62f, type: 3}
       propertyPath: m_Text
-      value: "\u8BED\u8A00"
+      value: "\u8A9E\u8A00"
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -44,13 +44,13 @@ namespace UnityEditor.Localizations
             {
                 string newTypeName = e.newValue?.Trim();
 
-                if (LocalizationSettings.LoaderTypeName != newTypeName)
+                if (LocalizationSettings.CustomLoaderTypeName != newTypeName)
                 {
-                    LocalizationSettings.LoaderTypeName = newTypeName; 
+                    LocalizationSettings.CustomLoaderTypeName = newTypeName; 
                 }
 
             });
-            loaderTypeField.SetValueWithoutNotify(LocalizationSettings.LoaderTypeName);
+            loaderTypeField.SetValueWithoutNotify(LocalizationSettings.CustomLoaderTypeName);
         }
     }
 }
