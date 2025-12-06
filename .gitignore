@@ -2,6 +2,7 @@
 /Library/
 /Temp/
 /*.sln
+/*.slnx
 /*.csproj
 gen/
 /ProjectSettings/ProjectVersion.txt
@@ -11,3 +12,4 @@ gen/
 /Logs/
 /Packages/packages-lock.json
 .vsconfig
+/UIElementsSchema
