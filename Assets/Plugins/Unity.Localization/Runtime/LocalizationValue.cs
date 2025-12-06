@@ -10,19 +10,23 @@ namespace UnityEngine.Localizations
         {
             this.Value = value;
             this.TypeName = typeName;
+            this.StringValue = value as string;
         }
 
         public LocalizationValue(string value)
         {
             this.TypeName = "string";
             this.Value = value;
+            this.StringValue = value;
         }
 
         public object Value { get; set; }
 
+        public string StringValue { get; set; }
+
         public string TypeName { get; set; }
 
-  
+
 
         public static Dictionary<string, LocalizationValue> StringDictionary(IDictionary<string, string> dic)
         {
@@ -36,7 +40,7 @@ namespace UnityEngine.Localizations
 
         public LocalizationValue Clone()
         {
-            return new LocalizationValue() { TypeName = TypeName, Value = Value };
+            return new LocalizationValue() { TypeName = TypeName, Value = Value, StringValue = StringValue };
         }
 
         public override string ToString()

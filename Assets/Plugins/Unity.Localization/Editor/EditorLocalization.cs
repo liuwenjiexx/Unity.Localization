@@ -37,7 +37,7 @@ namespace UnityEditor.Localizations
             get
             {
                 if (editorLocalizationValues == null)
-                    editorLocalizationValues = new DirectoryLocalizationValues(Path.Combine(PackageDir, "Editor/Localization"));
+                    editorLocalizationValues =new LocalizationValues( new DirectoryLocalizationLoader(Path.Combine(PackageDir, "Editor/Localization")));
                 return editorLocalizationValues;
             }
         }

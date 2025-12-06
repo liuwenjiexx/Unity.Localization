@@ -8,25 +8,25 @@ using System.Text;
 namespace UnityEngine.Localizations
 {
 
-    public class DirectoryLocalizationValues : LocalizationValues
+    public class DirectoryLocalizationLoader : ILocalizationLoader
     {
-        public DirectoryLocalizationValues(string directoryPath)
+        public DirectoryLocalizationLoader(string directoryPath)
         {
             DirectoryPath = directoryPath;
         }
 
         public string DirectoryPath { get; private set; }
 
-        protected override IEnumerable<string> LoadNames()
+        public IEnumerable<LanguageInfo> GetSupportedLangs()
         {
             foreach (var file in Localization.GetLocalizationFiles(DirectoryPath))
             {
                 string lang = Localization.ParseLangNameByFileName(file);
-                yield return lang;
+                yield return new(lang, lang);
             }
         }
 
-        protected override IDictionary<string, LocalizationValue> LoadValues(string lang)
+        public IDictionary<string, LocalizationValue> LoadValues(string lang)
         {
             if (DirectoryPath == null)
                 return null;

@@ -24,13 +24,13 @@ namespace UnityEditor.Localizations
         {
             keyProperty = serializedObject.FindProperty("key");
             formatPropery = serializedObject.FindProperty("format");
-            Localization.LoadLang(Localization.Lang);
+            Localization.LoadLang(Localization.CurrentLang);
         }
 
         [InitializeOnLoadMethod]
         static void InitializeOnLoadMethod()
         {
-            UnityEngine.Localizations.Localization.LoadLang(Localization.Lang);
+            UnityEngine.Localizations.Localization.LoadLang(Localization.CurrentLang);
         }
 
 
@@ -40,9 +40,9 @@ namespace UnityEditor.Localizations
 
 
             int selectedIndex = -1;
-            for (int i = 0; i < Localization.LangNames.Count; i++)
+            for (int i = 0; i < Localization.SupportedLanguages.Count; i++)
             {
-                if (Localization.LangNames[i] == Localization.SelectedLang)
+                if (Localization.SupportedLanguages[i].Name == Localization.SelectedLang)
                 {
                     selectedIndex = i;
                     break;
@@ -51,21 +51,21 @@ namespace UnityEditor.Localizations
 
             using (new GUILayout.HorizontalScope())
             {
-                EditorGUILayout.PrefixLabel(new GUIContent(Localization.Lang ?? string.Empty, $"({ Localization.Current.GetType().Name})"));
+                EditorGUILayout.PrefixLabel(new GUIContent(Localization.CurrentLang ?? string.Empty, $"({ Localization.Current.GetType().Name})"));
                 int newIndex = selectedIndex;
                 if (GUILayout.Button("<", GUILayout.ExpandWidth(false)))
                 {
-                    newIndex = (newIndex - 1 + Localization.LangNames.Count) % Localization.LangNames.Count;
+                    newIndex = (newIndex - 1 + Localization.SupportedLanguages.Count) % Localization.SupportedLanguages.Count;
                 }
 
-                newIndex = EditorGUILayout.Popup(newIndex + 1, new GUIContent[] { new GUIContent("None".Localization()) }.Concat(Localization.LangNames.Select(o => new GUIContent(o))).ToArray());
+                newIndex = EditorGUILayout.Popup(newIndex + 1, new GUIContent[] { new GUIContent("None".Localization()) }.Concat(Localization.SupportedLanguages.Select(o => new GUIContent(o.DisplayName))).ToArray());
 
                 newIndex--;
 
 
                 if (GUILayout.Button(">", GUILayout.ExpandWidth(false)))
                 {
-                    newIndex = (newIndex + 1) % Localization.LangNames.Count;
+                    newIndex = (newIndex + 1) % Localization.SupportedLanguages.Count;
                 }
 
                 if (selectedIndex != newIndex)
@@ -73,8 +73,8 @@ namespace UnityEditor.Localizations
                     if (newIndex < 0)
                         Localization.SelectedLang = null;
                     else
-                        Localization.SelectedLang = Localization.LangNames[newIndex];
-                    Localization.LoadLang(Localization.Lang);
+                        Localization.SelectedLang = Localization.SupportedLanguages[newIndex].Name;
+                    Localization.LoadLang(Localization.CurrentLang);
                 }
 
             }

@@ -1,55 +1,49 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Xml;
-using UnityEngine;
 using System.Linq;
-using System.Collections.ObjectModel;
 
 namespace UnityEngine.Localizations
 {
-    public abstract class LocalizationValues
+    public class LocalizationValues
     {
         public string Lang { get; private set; }
 
-        private IDictionary<string, LocalizationValue> langDic;
+
 
         private Dictionary<string, IDictionary<string, LocalizationValue>> cached;
-        private List<string> langParts;
 
         public bool IsInitialized { get; private set; }
-        private List<string> langNames;
-        private ReadOnlyCollection<string> readonlyLangNames;
-        public ReadOnlyCollection<string> LangNames { get => readonlyLangNames; }
+
+        //List 支持顺序
+        private List<LanguageInfo> supportedLanguages;
+
+        public IReadOnlyList<LanguageInfo> SupportedLanguages { get => supportedLanguages; }
 
         public string NotFoundKeyFormat { get; set; }
 
-        public LocalizationValues()
+        public LocalizationValues(ILocalizationLoader loader)
         {
-            langNames = new List<string>();
-            readonlyLangNames = langNames.AsReadOnly();
+            supportedLanguages = new();
+            this.loader = loader;
         }
 
-        protected abstract IEnumerable<string> LoadNames();
-
-        protected abstract IDictionary<string, LocalizationValue> LoadValues(string lang);
-
+        private ILocalizationLoader loader;
 
         public virtual void Initialize()
         {
             if (IsInitialized)
                 return;
             IsInitialized = true;
-            langNames.Clear();
-            foreach (var lang in LoadNames())
+            if (supportedLanguages == null)
+                supportedLanguages = new();
+            supportedLanguages.Clear();
+
+            foreach (var item in loader.GetSupportedLangs())
             {
-                if (!langNames.Contains(lang))
-                {
-                    langNames.Add(lang);
-                }
+                supportedLanguages.Add(item);
             }
-            langNames.Sort(StringComparer.Ordinal);
-            LoadLang(Localization.Lang);
+            string supportedLang = Localization.GetSupportedLang(supportedLanguages);
+            LoadLang(supportedLang);
             Localization.All.Add(this);
         }
 
@@ -60,42 +54,42 @@ namespace UnityEngine.Localizations
             lang = lang ?? string.Empty;
             if (cached == null)
                 cached = new Dictionary<string, IDictionary<string, LocalizationValue>>();
-            langDic = null;
-            if (langParts == null)
-                langParts = new List<string>();
-            langParts.Clear();
 
-            foreach (var part in EnumerateLang(lang))
+
+            string baseLang = Localization.DefaultLang;
+            foreach (var part in GetBaseLangList(lang))
             {
                 IDictionary<string, LocalizationValue> content = null;
 
+
                 if (!cached.TryGetValue(part, out content))
                 {
-                    content = LoadValues(part);
+                    content = loader.LoadValues(part);
                     if (content != null)
                     {
                         cached[part] = content;
+
+                        if (part != Localization.DefaultLang && !Localization.BaseLangMapping.ContainsKey(part))
+                        {
+                            Localization.BaseLangMapping[part] = baseLang;
+                        }
+                        baseLang = part;
                     }
                 }
-                if (content != null)
+                else
                 {
-                    var dic = new HierarchyDictionary<string, LocalizationValue>(langDic);
-                    dic.AddRangeLocal(content);
-                    langDic = dic;
-                    langParts.Add(part);
+                    baseLang = part;
                 }
+
             }
 
-            if (langDic == null)
-                langDic = new Dictionary<string, LocalizationValue>();
 
             Lang = lang;
         }
 
 
 
-
-        IEnumerable<string> EnumerateLang(string lang)
+        IEnumerable<string> GetBaseLangList(string lang)
         {
             HashSet<string> set = new HashSet<string>();
 
@@ -105,28 +99,65 @@ namespace UnityEngine.Localizations
                 yield return Localization.DefaultLang;
             }
 
-            string[] parts = lang.Split('-');
-            if (parts.Length > 1)
+
+
+            string[] parts = lang.Split(Localization.LangSeparator);
+
+            string partLang = null;
+            for (int i = 0; i < parts.Length; i++)
             {
-                if (!set.Contains(parts[0]))
+                if (i == 0)
                 {
-                    set.Add(parts[0]);
-                    yield return parts[0];
+                    partLang = parts[i];
+                }
+                else
+                {
+                    partLang += Localization.LangSeparator + parts[i];
+                }
+                if (!set.Contains(partLang))
+                {
+                    set.Add(partLang);
+                    yield return partLang;
                 }
             }
-
-            if (!set.Contains(lang))
-            {
-                set.Add(lang);
-                yield return lang;
-            }
-
         }
 
 
+        public bool TryGetValue(string lang, string key, out LocalizationValue value)
+        {
+            if (string.IsNullOrEmpty(lang))
+            {
+                value = default;
+                return false;
+            }
+            IDictionary<string, LocalizationValue> langDic;
+            if (cached.TryGetValue(lang, out langDic))
+            {
+                if (langDic.TryGetValue(key, out value))
+                    return true;
+            }
+
+            string baseLang = lang;
+            while (true)
+            {
+                if (!Localization.BaseLangMapping.TryGetValue(baseLang, out baseLang))
+                {
+                    break;
+                }
+                if (string.IsNullOrEmpty(baseLang))
+                    break;
+                if (cached.TryGetValue(baseLang, out langDic) && langDic.TryGetValue(key, out value))
+                {
+                    return true;
+                }
+            }
+            value = default;
+            return false;
+        }
+
         public bool HasItem(string key)
         {
-            return langDic.ContainsKey(key);
+            return key != null && TryGetValue(Localization.CurrentLang, key, out var value);
         }
 
         #region Get Value
@@ -135,16 +166,16 @@ namespace UnityEngine.Localizations
         {
             LocalizationValue value;
 
-            if (key != null && !langDic.TryGetValue(key, out value))
+            if (key != null && TryGetValue(Localization.CurrentLang, out value))
                 return value;
-            return default(LocalizationValue);
+            return default;
         }
 
         public bool TryGetValue(string key, out LocalizationValue value)
         {
-            if (key != null)
-                return langDic.TryGetValue(key, out value);
-            value = default(LocalizationValue);
+            if (key != null && TryGetValue(Localization.CurrentLang, key, out value))
+                return true;
+            value = default;
             return false;
         }
 
@@ -158,7 +189,7 @@ namespace UnityEngine.Localizations
                     return key;
                 return string.Format(NotFoundKeyFormat, key);
             }
-            return value.Value as string;
+            return value.StringValue;
         }
 
         public Texture2D GetTexture2D(string key)
@@ -182,15 +213,11 @@ namespace UnityEngine.Localizations
         public IDisposable BeginScope(string lang = null)
         {
             if (string.IsNullOrEmpty(lang))
-                lang = Localization.Lang;
+                lang = Localization.CurrentLang;
             return new Localization.LocalizationScope(this, lang);
         }
 
     }
 
-    public abstract class DefaultLocalizationValues : LocalizationValues
-    {
-
-    }
 
 }

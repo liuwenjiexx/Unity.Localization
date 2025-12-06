@@ -16,23 +16,23 @@ namespace UnityEngine.Localizations.Example
         /// <summary>
         /// 下拉列表语言选项
         /// </summary>
-        private static Dictionary<string, string> langs = new Dictionary<string, string>()
+        private static List<LanguageInfo> supportedLangs = new()
         {
-            {"en", "English" },
-            {"zh","中文" },
-              {"zh-TW","正體字" }
+          new  ("en", "English" ),
+           new ("zh","中文" ),
+             new ("zh-TW", "正體字" )
         };
 
 
-        class DataLocalizationValues : DefaultLocalizationValues
+        class LocalizationDataLoader : ILocalizationLoader
         {
 
-            protected override IEnumerable<string> LoadNames()
+            public IEnumerable<LanguageInfo> GetSupportedLangs()
             {
-                return langs.Keys;
+                return supportedLangs;
             }
 
-            protected override IDictionary<string, LocalizationValue> LoadValues(string lang)
+            public IDictionary<string, LocalizationValue> LoadValues(string lang)
             {
                 IDictionary<string, LocalizationValue> result = null;
                 switch (lang)
@@ -88,11 +88,11 @@ namespace UnityEngine.Localizations.Example
                     return;
                 }
                 int i = 1;
-                foreach (var item in langs)
+                foreach (var item in supportedLangs)
                 {
                     if (i == v)
                     {
-                        lang = item.Key;
+                        lang = item.Name;
                         break;
                     }
                     i++;
@@ -103,7 +103,7 @@ namespace UnityEngine.Localizations.Example
             });
             listLanguage.ClearOptions();
 
-            listLanguage.AddOptions(new string[] { "Follow  System" }.Concat(langs.Values).ToList());
+            listLanguage.AddOptions(new string[] { "Follow  System" }.Concat(supportedLangs.Select(_ => _.DisplayName)).ToList());
 
             UpdateLanguageDropdown();
         }
@@ -118,9 +118,9 @@ namespace UnityEngine.Localizations.Example
         {
 
             int j = 0;
-            foreach (var item in langs)
+            foreach (var item in supportedLangs)
             {
-                if (item.Key == Localization.Lang)
+                if (item.Name == Localization.CurrentLang)
                 {
                     listLanguage.value = j + 1;
                     break;

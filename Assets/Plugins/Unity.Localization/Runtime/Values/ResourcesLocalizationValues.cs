@@ -5,7 +5,7 @@ using System;
 
 namespace UnityEngine.Localizations
 {
-    public class ResourcesLocalizationValues : LocalizationValues
+    public class ResourcesLocalizationValues : ILocalizationLoader
     {
         public ResourcesLocalizationValues(string resourcesPath)
         {
@@ -16,7 +16,7 @@ namespace UnityEngine.Localizations
 
 
 
-        protected override IEnumerable<string> LoadNames()
+        public IEnumerable<LanguageInfo> GetSupportedLangs()
         {
 
             foreach (var item in Resources.LoadAll<TextAsset>(ResourcesPath))
@@ -25,13 +25,13 @@ namespace UnityEngine.Localizations
                 if (name.EndsWith(".lang"))
                 {
                     name = name.Substring(0, name.Length - 5);
-                    yield return name;
+                    yield return new LanguageInfo(name, name);
                 }
             }
 
         }
 
-        protected override IDictionary<string, LocalizationValue> LoadValues(string lang)
+        public IDictionary<string, LocalizationValue> LoadValues(string lang)
         {
             IDictionary<string, LocalizationValue> content = null;
             TextAsset txt = Resources.Load<TextAsset>(ResourcesPath + "/" + lang + ".lang");

@@ -1,32 +1,38 @@
 ﻿//***** 运行该例子，请取消该注释 *****
-//#define TEST_CUSTOM 
+#define TEST_CUSTOM 
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Localizations;
 using UnityEngine.UI;
 
 namespace UnityEngine.Localizations
 {
-    
+
 #if TEST_CUSTOM
 
     /// <summary>
     /// 定制数据源
     /// </summary>
-    class DataLocalizationValues : DefaultLocalizationValues
+    class LocalizationDataLoader : ILocalizationLoader
     {
-
-        protected override IEnumerable<string> LoadNames()
+        private static List<LanguageInfo> supportedLangs = new()
         {
-            return new string[] { "en", "zh", "zh-TW" };
+          new  ("en", "English" ),
+           new ("zh","中文" ),
+             new ("zh-TW", "正體字" )
+        };
+        public IEnumerable<LanguageInfo> GetSupportedLangs()
+        {
+            return supportedLangs;
         }
 
-        protected override IDictionary<string, LocalizationValue> LoadValues(string lang)
+        public IDictionary<string, LocalizationValue> LoadValues(string lang)
         {
             IDictionary<string, LocalizationValue> result = null;
-            switch (lang)
+            switch (lang.ToLower())
             {
                 case "zh":
                     result = LocalizationValue.StringDictionary(new Dictionary<string, string>()
@@ -44,7 +50,7 @@ namespace UnityEngine.Localizations
                             {"Language","Language" }
                         });
                     break;
-                case "zh-TW":
+                case "zh-tw":
                     result = LocalizationValue.StringDictionary(new Dictionary<string, string>() {
                             {"Source","Custom-zh-TW" },
                         { "Language", "語言" }
@@ -56,6 +62,7 @@ namespace UnityEngine.Localizations
     }
 
 #endif
+
 
     public class CustomLoad : MonoBehaviour
     {
@@ -72,6 +79,23 @@ namespace UnityEngine.Localizations
               {"zh-TW","正體字" }
         };
 
+        static LocalizationDataLoader dataLocalizationValues = new LocalizationDataLoader();
+
+        //#if UNITY_EDITOR
+        //        [InitializeOnLoadMethod]
+        //        static void InitializeOnLoadMethod()
+        //        {
+        //            Localization.Default = dataLocalizationValues;
+        //            Debug.Log("InitializeOnLoadMethod");
+        //        }
+        //#endif
+
+        //[RuntimeInitializeOnLoadMethod]
+        //static void RuntimeInitializeOnLoadMethod()
+        //{
+        //    Localization.Default = dataLocalizationValues;
+        //    Debug.Log("RuntimeInitializeOnLoadMethod");
+        //}
 
         // Start is called before the first frame update
         void Start()
@@ -137,7 +161,7 @@ namespace UnityEngine.Localizations
             int j = 0;
             foreach (var item in langs)
             {
-                if (item.Key == Localization.Lang)
+                if (item.Key == Localization.CurrentLang)
                 {
                     listLanguage.value = j + 1;
                     break;

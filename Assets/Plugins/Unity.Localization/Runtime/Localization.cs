@@ -32,17 +32,32 @@ namespace UnityEngine.Localizations
             }
         }
 
-        private const string LocalizationLanguageKey = "Localization.Language";
+        private const string LocalizationSelectedLanguageKey = "Localization.SelectedLanguage";
         private static LocalizationValues current;
         private static string selectedLang;
 
 
-        public static ReadOnlyCollection<string> LangNames { get => Current.LangNames; }
+        public static IReadOnlyList<LanguageInfo> SupportedLanguages { get => Current.SupportedLanguages; }
 
 
         internal static List<LocalizationValues> All { get; private set; } = new List<LocalizationValues>();
 
-        public static string DefaultLang { get; set; }
+        private static string defaultLang;
+        public static string DefaultLang
+        {
+            get
+            {
+                return defaultLang;
+            }
+            set
+            {
+                if (defaultLang != value)
+                {
+                    defaultLang = value;
+                    currentLang = GetSupportedLang();
+                }
+            }
+        }
 
         public static string ExtensionName { get; private set; } = "lang.xml";
 
@@ -50,56 +65,37 @@ namespace UnityEngine.Localizations
 
         public static string NotFoundKeyFormat { get; private set; }
 
+        public const char LangSeparator = '-';
+
         private static Dictionary<string, ILocalizationValueProvider> valueProviders;
 
         const string RootNodeName = "localization";
         public const string XMLNS = "urn:schema-localization";
-        private static LinkedList<Localization> nodes = new LinkedList<Localization>();
-        private LinkedListNode<Localization> node;
+        //private static LinkedList<Localization> nodes = new LinkedList<Localization>();
+        //private LinkedListNode<Localization> node;
         public static Action LanguageChanged;
+
+        public static Dictionary<string, string> BaseLangMapping = new();
+
+        private static int MainThreadId;
+        private static string currentLang;
+
         //   static ConfigProperty langConfig = new ConfigProperty(localization_current_key, typeof(string), null);
 
         /// <summary>
         /// 优先级 <see cref="SelectedLang"/>, <see cref="DefaultLang"/> <see cref="Thread.CurrentUICulture"/> <see cref="Thread.CurrentCulture"/>, <see cref="Application.systemLanguage"/>, <see cref="DefaultLang"/>
         /// </summary>
-        public static string Lang
+        public static string CurrentLang
         {
             get
             {
-                string lang;
-                lang = SelectedLang;
-
-                if (string.IsNullOrEmpty(lang))
+                if (string.IsNullOrEmpty(currentLang))
                 {
-                    if (!string.IsNullOrEmpty(DefaultLang))
-                    {
-                        lang = DefaultLang;
-                    }
-                    else
-                    {
-                        Thread thread = Thread.CurrentThread;
-                        if (thread.CurrentUICulture != null && !string.IsNullOrEmpty(thread.CurrentUICulture.Name))
-                        {
-                            lang = thread.CurrentUICulture.Name;
-                        }
-                        else if (thread.CurrentCulture != null && !string.IsNullOrEmpty(thread.CurrentCulture.Name))
-                        {
-                            lang = thread.CurrentCulture.Name;
-                        }
-                        else
-                        {
-                            lang = SystemLanguageToLangName(Application.systemLanguage);
-                        }
-                    }
+                    currentLang = GetSupportedLang();
                 }
-
-
-                if (string.IsNullOrEmpty(lang))
-                    lang = "en";
-                return lang;
+                return currentLang;
             }
         }
-
 
         public static string SelectedLang
         {
@@ -107,7 +103,7 @@ namespace UnityEngine.Localizations
             {
                 if (selectedLang == null)
                 {
-                    selectedLang = PlayerPrefs.GetString(LocalizationLanguageKey, null);
+                    selectedLang = PlayerPrefs.GetString(LocalizationSelectedLanguageKey, null);
                     if (selectedLang == null)
                         selectedLang = string.Empty;
                 }
@@ -117,17 +113,22 @@ namespace UnityEngine.Localizations
             {
                 if (SelectedLang != value)
                 {
-                    string lang = Lang;
+                    string lang = CurrentLang;
                     selectedLang = value;
-                    PlayerPrefs.SetString(LocalizationLanguageKey, value);
+                    PlayerPrefs.SetString(LocalizationSelectedLanguageKey, value);
                     PlayerPrefs.Save();
-                    if (lang != Lang)
+
+                    currentLang = GetSupportedLang();
+                    if (currentLang != lang)
                     {
-                        LoadLang(Lang);
+                        LoadLang(currentLang);
                     }
+                    SelectedLangChanged?.Invoke();
                 }
             }
         }
+
+        public static event Action SelectedLangChanged;
 
         private static LocalizationValues defaultLocal;
         public static LocalizationValues Default
@@ -136,17 +137,19 @@ namespace UnityEngine.Localizations
             {
                 if (defaultLocal == null)
                 {
+                    ILocalizationLoader loader = null;
                     foreach (var type in System.AppDomain.CurrentDomain.GetAssemblies()
                         .Referenced(typeof(LocalizationValues).Assembly)
                         .SelectMany(o => o.GetTypes())
-                        .Where(o => !o.IsAbstract && o.IsSubclassOf(typeof(DefaultLocalizationValues))))
+                        .Where(o => !o.IsAbstract && o.IsSubclassOf(typeof(ILocalizationLoader))))
                     {
-                        defaultLocal = Activator.CreateInstance(type) as LocalizationValues;
+                        loader = Activator.CreateInstance(type) as ILocalizationLoader;
                         break;
                     }
 
-                    if (defaultLocal == null)
-                        defaultLocal = new ResourcesLocalizationValues("Localization");
+                    if (loader == null)
+                        loader = new ResourcesLocalizationValues("Localization");
+                    defaultLocal = new LocalizationValues(loader);
                 }
                 return defaultLocal;
             }
@@ -168,42 +171,124 @@ namespace UnityEngine.Localizations
             set => current = value;
         }
 
-        private void Awake()
+        public static string GetDefaultLang()
         {
-            node = nodes.AddFirst(this);
-            isDiried = true;
+            string lang;
+            lang = SelectedLang;
 
+            if (string.IsNullOrEmpty(lang))
+            {
+                if (!string.IsNullOrEmpty(DefaultLang))
+                {
+                    lang = DefaultLang;
+                }
+                else
+                {
+                    Thread thread = Thread.CurrentThread;
+                    if (thread.CurrentUICulture != null && !string.IsNullOrEmpty(thread.CurrentUICulture.Name))
+                    {
+                        lang = thread.CurrentUICulture.Name;
+                    }
+                    else if (thread.CurrentCulture != null && !string.IsNullOrEmpty(thread.CurrentCulture.Name))
+                    {
+                        lang = thread.CurrentCulture.Name;
+                    }
+                    else
+                    {
+                        lang = SystemLanguageToLangName(Application.systemLanguage);
+                    }
+                }
+            }
+
+
+            if (string.IsNullOrEmpty(lang))
+                lang = "en";
+            return lang;
         }
-        // Use this for initialization
-        void Start()
+        public static string GetSupportedLang()
         {
-            if (isDiried)
-                OnChanged();
+            return GetSupportedLang(SupportedLanguages);
+        }
+        public static string GetSupportedLang(IEnumerable<LanguageInfo> supportedLangs)
+        {
+            string lang;
+
+            lang = SelectedLang;
+            if (!string.IsNullOrEmpty(lang) && supportedLangs.Any(_ => _.Name == lang))
+            {
+                return lang;
+            }
+
+
+            Thread thread = Thread.CurrentThread;
+            if (thread.CurrentUICulture != null && !string.IsNullOrEmpty(thread.CurrentUICulture.Name))
+            {
+                lang = thread.CurrentUICulture.Name;
+                if (supportedLangs.Any(_ => _.Name == lang))
+                {
+                    return lang;
+                }
+            }
+            if (thread.CurrentCulture != null && !string.IsNullOrEmpty(thread.CurrentCulture.Name))
+            {
+                lang = thread.CurrentCulture.Name;
+                if (supportedLangs.Any(_ => _.Name == lang))
+                {
+                    return lang;
+                }
+            }
+
+            {
+                lang = SystemLanguageToLangName(Application.systemLanguage);
+                if (supportedLangs.Any(_ => _.Name == lang))
+                {
+                    return lang;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(DefaultLang))
+            {
+                lang = DefaultLang;
+                if (supportedLangs.Any(_ => _.Name == lang))
+                {
+                    return lang;
+                }
+            }
+
+            if (string.IsNullOrEmpty(lang))
+                lang = "en";
+            return lang;
         }
 
         public void OnChanged()
         {
-            if (!isActiveAndEnabled)
-            {
-                isDiried = true;
-                return;
-            }
-            isDiried = false;
+            /*
+             if (!isActiveAndEnabled)
+             {
+                 isDiried = true;
+                 return;
+             }
+             isDiried = false;
+             */
             if (!string.IsNullOrEmpty(key))
             {
-                Text txt = GetComponent<Text>();
+
                 string value = GetString(key);
                 if (!string.IsNullOrEmpty(format))
                     value = string.Format(format, value);
-                txt.text = value;
-#if UNITY_EDITOR
-                if (txt.enabled)
+                Text text = GetComponent<Text>();
+                if (text)
                 {
-                    txt.enabled = false;
-                    txt.enabled = true;
-                }
+                    text.text = value;
+#if UNITY_EDITOR
+                    if (text.enabled)
+                    {
+                        text.enabled = false;
+                        text.enabled = true;
+                    }
 #endif
-
+                    return;
+                }
             }
             else
             {
@@ -216,17 +301,22 @@ namespace UnityEngine.Localizations
             if (IsInitialized)
                 return;
             IsInitialized = true;
-
+            MainThreadId = Thread.CurrentThread.ManagedThreadId;
+            currentLang = null;
+            var loader = Default;
             //Default.NotFoundKeyFormat = NotFoundKeyFormat;
-            Default.Initialize();
+            loader.Initialize();
+            currentLang = GetSupportedLang();
 
             if (!Application.isEditor)
-                Debug.Log($"Initalized Default <{Default}> Lang <{Lang}> LangNames <{LangNames.Count}> systemLanguage <{ Application.systemLanguage}> Thread CurrentCulture <{Thread.CurrentThread.CurrentCulture.Name}>");
+                Debug.Log($"Initalized Default <{Default}> Lang <{CurrentLang}> LangNames <{SupportedLanguages.Count}> systemLanguage <{Application.systemLanguage}> Thread CurrentCulture <{Thread.CurrentThread.CurrentCulture.Name}>");
         }
+
+        public static bool UpdateOnLanguageChagned = true;
 
         public static void LoadLang(string lang)
         {
-            
+
             Initialize();
             string oldLang = Current.Lang;
             if (oldLang == lang)
@@ -235,27 +325,44 @@ namespace UnityEngine.Localizations
             bool prevLoaded = Current.Lang != null;
             Current.LoadLang(lang);
 
-            // if (prevLoaded)
-            {
-                foreach (Localization item in nodes)
-                {
-                    item.OnChanged();
-                }
-            }
+            currentLang = GetSupportedLang();
+
             if (!string.IsNullOrEmpty(oldLang))
             {
                 LanguageChanged?.Invoke();
             }
+
+            // if (prevLoaded)
+            {
+                //foreach (Localization item in nodes)
+                //{
+                //    item.OnChanged();
+                //}
+                if (UpdateOnLanguageChagned)
+                {
+                    var items = Object.FindObjectsByType<Localization>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                    foreach (var item in items)
+                    {
+                        item.OnChanged();
+                    }
+                }
+            }
+
         }
 
         private void OnEnable()
         {
-            if (isDiried)
+            Debug.Log(name + " OnEnable");
+            //if (isDiried)
             {
                 OnChanged();
+                if (Application.isPlaying)
+                {
+                    enabled = false;
+                }
             }
         }
-
+        /*
         private void OnDestroy()
         {
 
@@ -265,7 +372,7 @@ namespace UnityEngine.Localizations
                 node = null;
             }
         }
-
+        */
         //public static void EnsureLoad()
         //{
         //    if (Default.Lang != null)

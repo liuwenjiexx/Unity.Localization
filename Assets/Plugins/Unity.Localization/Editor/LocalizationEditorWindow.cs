@@ -752,7 +752,7 @@ namespace UnityEditor.Localizations
 
             using (new GUILayout.HorizontalScope())
             {
-                GUILayout.Label($"{"Current".Localization()}[{Localization.Lang}] {"Selected".Localization()} ", GUILayout.ExpandWidth(false));
+                GUILayout.Label($"{"Current".Localization()}[{Localization.CurrentLang}] {"Selected".Localization()} ", GUILayout.ExpandWidth(false));
 
                 PopupLang(allLangNames, expandWidth: false);
 
