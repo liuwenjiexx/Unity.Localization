@@ -1,0 +1,14 @@
+{
+    "name": "Settings",
+    "scope": 1,
+    "items": [
+        {
+            "type": "SettingsManagement.SerializableType, Settings, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "key": "LoaderType",
+            "platform": "Default",
+            "variant": "",
+            "value": "{\"value\":{\"typeName\":\"UnityEngine.Localizations.LocalizationDataLoader\"}}"
+        }
+    ],
+    "package": "unity.localization"
+}

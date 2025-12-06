@@ -4,6 +4,8 @@ using UnityEngine.Localizations;
 
 public interface ILocalizationLoader
 {
+    int Priority { get; }
+   
     IEnumerable<LanguageInfo> GetSupportedLangs();
 
     IDictionary<string, LocalizationValue> LoadValues(string lang);

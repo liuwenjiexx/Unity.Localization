@@ -1,8 +1,10 @@
 {
-    "name": "Unity.Localization.Editor",
+    "name": "Localization.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:38edba7c2a9152a42bcdb06d593885c9"
+        "GUID:38edba7c2a9152a42bcdb06d593885c9",
+        "GUID:e734ab96663a503408ecc1a123dcf7d2",
+        "GUID:a2ba6bd5f14751f478081de4b4745709"
     ],
     "includePlatforms": [
         "Editor"

@@ -14,6 +14,7 @@ namespace UnityEngine.Localizations
     [ExecuteInEditMode]
     public class Localization : MonoBehaviour
     {
+        [SerializeField]
         public string key;
         [HideInInspector]
         [TextArea]
@@ -32,9 +33,8 @@ namespace UnityEngine.Localizations
             }
         }
 
-        private const string LocalizationSelectedLanguageKey = "Localization.SelectedLanguage";
+
         private static LocalizationValues current;
-        private static string selectedLang;
 
 
         public static IReadOnlyList<LanguageInfo> SupportedLanguages { get => Current.SupportedLanguages; }
@@ -78,7 +78,7 @@ namespace UnityEngine.Localizations
         public static Dictionary<string, string> BaseLangMapping = new();
 
         private static int MainThreadId;
-        private static string currentLang;
+        internal static string currentLang;
 
         //   static ConfigProperty langConfig = new ConfigProperty(localization_current_key, typeof(string), null);
 
@@ -97,38 +97,14 @@ namespace UnityEngine.Localizations
             }
         }
 
-        public static string SelectedLang
-        {
-            get
-            {
-                if (selectedLang == null)
-                {
-                    selectedLang = PlayerPrefs.GetString(LocalizationSelectedLanguageKey, null);
-                    if (selectedLang == null)
-                        selectedLang = string.Empty;
-                }
-                return selectedLang;
-            }
-            set
-            {
-                if (SelectedLang != value)
-                {
-                    string lang = CurrentLang;
-                    selectedLang = value;
-                    PlayerPrefs.SetString(LocalizationSelectedLanguageKey, value);
-                    PlayerPrefs.Save();
 
-                    currentLang = GetSupportedLang();
-                    if (currentLang != lang)
-                    {
-                        LoadLang(currentLang);
-                    }
-                    SelectedLangChanged?.Invoke();
-                }
-            }
-        }
 
         public static event Action SelectedLangChanged;
+
+        internal static void OnSelectedLangChanged()
+        {
+            SelectedLangChanged?.Invoke();
+        }
 
         private static LocalizationValues defaultLocal;
         public static LocalizationValues Default
@@ -138,17 +114,28 @@ namespace UnityEngine.Localizations
                 if (defaultLocal == null)
                 {
                     ILocalizationLoader loader = null;
-                    foreach (var type in System.AppDomain.CurrentDomain.GetAssemblies()
-                        .Referenced(typeof(LocalizationValues).Assembly)
-                        .SelectMany(o => o.GetTypes())
-                        .Where(o => !o.IsAbstract && o.IsSubclassOf(typeof(ILocalizationLoader))))
-                    {
-                        loader = Activator.CreateInstance(type) as ILocalizationLoader;
-                        break;
-                    }
+                    /* foreach (var type in System.AppDomain.CurrentDomain.GetAssemblies()
+                         .Referenced(typeof(LocalizationValues).Assembly)
+                         .SelectMany(o => o.GetTypes())
+                         .Where(o => !o.IsAbstract && o.IsSubclassOf(typeof(ILocalizationLoader))))
+                     {
+                         var c= type.GetConstructor(Type.EmptyTypes);
+                         if (c == null)
+                             continue;
+                         loader = Activator.CreateInstance(type) as ILocalizationLoader;
+                         break;
+                     }*/
 
+                    Type loaderType = LocalizationSettings.LoaderType;
+                    if (loaderType == null && !string.IsNullOrEmpty(LocalizationSettings.LoaderTypeName))
+                    {
+                        Debug.LogError("Localization Not found type: " + LocalizationSettings.LoaderTypeName);
+                    }
+                    if (loader == null && !string.IsNullOrEmpty(LocalizationSettings.ResourcesPath))
+                        loader = new ResourcesLocalizationLoader(LocalizationSettings.ResourcesPath);
                     if (loader == null)
-                        loader = new ResourcesLocalizationValues("Localization");
+                        throw new Exception($"Localization {nameof(ILocalizationLoader)} null");
+
                     defaultLocal = new LocalizationValues(loader);
                 }
                 return defaultLocal;
@@ -174,7 +161,7 @@ namespace UnityEngine.Localizations
         public static string GetDefaultLang()
         {
             string lang;
-            lang = SelectedLang;
+            lang = LocalizationSettings.SelectedLang;
 
             if (string.IsNullOrEmpty(lang))
             {
@@ -213,7 +200,7 @@ namespace UnityEngine.Localizations
         {
             string lang;
 
-            lang = SelectedLang;
+            lang = LocalizationSettings.SelectedLang;
             if (!string.IsNullOrEmpty(lang) && supportedLangs.Any(_ => _.Name == lang))
             {
                 return lang;
@@ -312,7 +299,7 @@ namespace UnityEngine.Localizations
                 Debug.Log($"Initalized Default <{Default}> Lang <{CurrentLang}> LangNames <{SupportedLanguages.Count}> systemLanguage <{Application.systemLanguage}> Thread CurrentCulture <{Thread.CurrentThread.CurrentCulture.Name}>");
         }
 
-        public static bool UpdateOnLanguageChagned = true;
+
 
         public static void LoadLang(string lang)
         {
@@ -338,7 +325,7 @@ namespace UnityEngine.Localizations
                 //{
                 //    item.OnChanged();
                 //}
-                if (UpdateOnLanguageChagned)
+                if (LocalizationSettings.UpdateOnLanguageChagned)
                 {
                     var items = Object.FindObjectsByType<Localization>(FindObjectsInactive.Include, FindObjectsSortMode.None);
                     foreach (var item in items)

@@ -5,16 +5,16 @@ using System;
 
 namespace UnityEngine.Localizations
 {
-    public class ResourcesLocalizationValues : ILocalizationLoader
+    public class ResourcesLocalizationLoader : ILocalizationLoader
     {
-        public ResourcesLocalizationValues(string resourcesPath)
+        public ResourcesLocalizationLoader(string resourcesPath)
         {
             this.ResourcesPath = resourcesPath;
         }
 
         public string ResourcesPath { get; private set; }
 
-
+        public int Priority => -1;
 
         public IEnumerable<LanguageInfo> GetSupportedLangs()
         {

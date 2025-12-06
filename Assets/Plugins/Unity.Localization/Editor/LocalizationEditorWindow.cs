@@ -339,7 +339,7 @@ namespace UnityEditor.Localizations
             int selectedIndex = -1;
             for (int i = 0; i < langNames.Length; i++)
             {
-                if (langNames[i] == Localization.SelectedLang)
+                if (langNames[i] == LocalizationSettings.SelectedLang)
                 {
                     selectedIndex = i;
                     break;
@@ -367,9 +367,9 @@ namespace UnityEditor.Localizations
             {
                 newIndex--;
                 if (newIndex < 0)
-                    Localization.SelectedLang = null;
+                    LocalizationSettings.SelectedLang = null;
                 else
-                    Localization.SelectedLang = langNames[newIndex];
+                    LocalizationSettings.SelectedLang = langNames[newIndex];
                 changed = true;
                 GUI.changed = true;
             }

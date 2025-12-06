@@ -10,12 +10,15 @@ namespace UnityEngine.Localizations
 
     public class DirectoryLocalizationLoader : ILocalizationLoader
     {
+
         public DirectoryLocalizationLoader(string directoryPath)
         {
             DirectoryPath = directoryPath;
         }
 
         public string DirectoryPath { get; private set; }
+
+        public int Priority => -1;
 
         public IEnumerable<LanguageInfo> GetSupportedLangs()
         {

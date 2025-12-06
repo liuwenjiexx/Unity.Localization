@@ -42,7 +42,7 @@ namespace UnityEditor.Localizations
             int selectedIndex = -1;
             for (int i = 0; i < Localization.SupportedLanguages.Count; i++)
             {
-                if (Localization.SupportedLanguages[i].Name == Localization.SelectedLang)
+                if (Localization.SupportedLanguages[i].Name == LocalizationSettings.SelectedLang)
                 {
                     selectedIndex = i;
                     break;
@@ -71,9 +71,9 @@ namespace UnityEditor.Localizations
                 if (selectedIndex != newIndex)
                 {
                     if (newIndex < 0)
-                        Localization.SelectedLang = null;
+                        LocalizationSettings.SelectedLang = null;
                     else
-                        Localization.SelectedLang = Localization.SupportedLanguages[newIndex].Name;
+                        LocalizationSettings.SelectedLang = Localization.SupportedLanguages[newIndex].Name;
                     Localization.LoadLang(Localization.CurrentLang);
                 }
 

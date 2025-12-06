@@ -15,6 +15,7 @@ namespace UnityEngine.Localizations
 
     /// <summary>
     /// 定制数据源
+    /// Project Settings/Tool/Localization/LoaderType = UnityEngine.Localizations.LocalizationDataLoader 
     /// </summary>
     class LocalizationDataLoader : ILocalizationLoader
     {
@@ -24,6 +25,9 @@ namespace UnityEngine.Localizations
            new ("zh","中文" ),
              new ("zh-TW", "正體字" )
         };
+
+        public int Priority => 1;
+
         public IEnumerable<LanguageInfo> GetSupportedLangs()
         {
             return supportedLangs;
@@ -125,7 +129,7 @@ namespace UnityEngine.Localizations
                 string lang = null;
                 if (v == 0)
                 {
-                    Localization.SelectedLang = null;
+                    LocalizationSettings.SelectedLang = null;
                     return;
                 }
                 int i = 1;
@@ -140,7 +144,7 @@ namespace UnityEngine.Localizations
                 }
 
                 //设置选择的语言
-                Localization.SelectedLang = lang;
+                LocalizationSettings.SelectedLang = lang;
             });
             listLanguage.ClearOptions();
 
