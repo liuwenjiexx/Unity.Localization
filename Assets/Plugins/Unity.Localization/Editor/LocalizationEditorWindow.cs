@@ -4,9 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Xml;
-using UnityEditor.GUIExtensions;
 using UnityEngine;
-using UnityEngine.GUIExtensions;
 using UnityEngine.Localizations;
 
 namespace UnityEditor.Localizations
@@ -525,7 +523,7 @@ namespace UnityEditor.Localizations
                                         {
                                             if (inheritValue && !baseData.values.ContainsKey(key))
                                             {
-                                                using (new GUIx.Scopes.ColorScope(Color.red))
+                                                using (new GUIUtilityx.Scopes.ColorScope(Color.red))
                                                 {
                                                     GUILayout.Label("(missing)");
                                                 }
@@ -787,7 +785,7 @@ namespace UnityEditor.Localizations
             using (new GUILayout.HorizontalScope())
             {
 
-                searchKey = EditorGUILayoutx.SearchTextField(searchKey, GUIContent.none, GUILayout.Width(EditorGUIUtility.labelWidth));
+                searchKey = GUIUtilityx.SearchTextField(searchKey, GUIContent.none, GUILayout.Width(EditorGUIUtility.labelWidth));
 
                 int typeNameIndex = 0;
                 string[] typeNames = EditorLocalization.GetValueTypeNames().ToArray();
@@ -805,7 +803,7 @@ namespace UnityEditor.Localizations
                 newValueTypeName = typeNames[typeNameIndex];
 
                 string newKeyCurrent;
-                newKey = EditorGUILayoutx.DelayedPlaceholderField(newKey ?? string.Empty, out newKeyCurrent, new GUIContent("New Key".Localization())/*, GUILayout.Width(EditorGUIUtility.labelWidth)*/);
+                newKey = GUIUtilityx.DelayedPlaceholderField(newKey ?? string.Empty, out newKeyCurrent, new GUIContent("New Key".Localization())/*, GUILayout.Width(EditorGUIUtility.labelWidth)*/);
 
 
 
@@ -903,7 +901,7 @@ namespace UnityEditor.Localizations
                         {
                             // if (isBaseEditing)
                             //{
-                            string newKey = EditorGUILayoutx.DelayedEditableLabel(key, labelStyle: style);
+                            string newKey = GUIUtilityx.DelayedEditableLabel(key, labelStyle: style);
                             if (newKey != key && !string.IsNullOrEmpty(newKey))
                             {
 
@@ -1032,7 +1030,7 @@ namespace UnityEditor.Localizations
             else
             {
                 var baseValue = baseData.values[key];
-                using (new GUIx.Scopes.ColorScope(GUI.color * new Color(1, 1, 1, 0.5f)))
+                using (new GUIUtilityx.Scopes.ColorScope(GUI.color * new Color(1, 1, 1, 0.5f)))
                 using (var checker = new EditorGUI.ChangeCheckScope())
                 {
                     object newValue = drawer.OnGUI(baseValue.Value);

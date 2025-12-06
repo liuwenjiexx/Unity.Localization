@@ -11,6 +11,7 @@ namespace UnityEditor.Localizations
 {
     public static class InternalExtensions
     {
+
         public static string ReplacePathSeparator(this string path)
         {
             if (path == null)
@@ -211,5 +212,6 @@ namespace UnityEditor.Localizations
         }
 
         #endregion
+
     }
 }
