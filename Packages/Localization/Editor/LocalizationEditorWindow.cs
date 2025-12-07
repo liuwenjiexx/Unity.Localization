@@ -1,9 +1,12 @@
-﻿using System;
+﻿using GluonGui.Dialog;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Xml;
+using Unity.EditorCoroutines.Editor;
 using UnityEngine;
 using UnityEngine.Localizations;
 
@@ -41,7 +44,7 @@ namespace UnityEditor.Localizations
 
             }
 
-            using (EditorLocalization.EditorLocalizationValues.BeginScope())
+            using (EditorLocalizationUtility.EditorLocalizationValues.BeginScope())
             {
                 titleContent = new GUIContent("Localization".Localization());
 
@@ -61,12 +64,12 @@ namespace UnityEditor.Localizations
                     allLangNames = new string[0];
                     allLangPaths = new string[0];
                 }
-                EditorLocalization.GetValueDrawer("string");
+                EditorLocalizationUtility.GetValueDrawer("string");
             }
         }
 
 
-        [MenuItem(EditorLocalization.MenuPrefix + "Localization", priority = EditorLocalization.MenuPriority)]
+        [MenuItem(EditorLocalizationUtility.MenuPrefix + "Localization", priority = EditorLocalizationUtility.MenuPriority)]
         public static void Show_Menu()
         {
             GetWindow<LocalizationEditorWindow>().Show();
@@ -319,8 +322,8 @@ namespace UnityEditor.Localizations
 
             XmlDocument doc = new XmlDocument();
             doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", null));
-            XmlElement elemRoot = doc.CreateElement(EditorLocalization.RootNodeName);
-            elemRoot.SetOrAddAttributeValue("xmlns", EditorLocalization.XMLNS);
+            XmlElement elemRoot = doc.CreateElement(EditorLocalizationUtility.RootNodeName);
+            elemRoot.SetOrAddAttributeValue("xmlns", EditorLocalizationUtility.XMLNS);
 
             doc.AppendChild(elemRoot);
             doc.Save(filePath);
@@ -386,7 +389,7 @@ namespace UnityEditor.Localizations
 
         private void OnGUI()
         {
-            using (EditorLocalization.EditorLocalizationValues.BeginScope())
+            using (EditorLocalizationUtility.EditorLocalizationValues.BeginScope())
             {
                 GUILangStatus();
 
@@ -475,12 +478,17 @@ namespace UnityEditor.Localizations
 
                                         if (GUILayout.Button("T", TranslateButtonStyle, GUILayout.ExpandWidth(false)))
                                         {
-                                            List<TranslateItem> list = new List<TranslateItem>();
-                                            foreach (var key in item.values.Keys)
+
+                                            if (EditorUtility.DisplayDialog("Translate", $"Auto Translate All {baseData.lang}=>{item.lang}", "ok", "cancel"))
                                             {
-                                                list.Add(new TranslateItem() { itemData = item, key = key });
+
+                                                List<TranslateItem> list = new List<TranslateItem>();
+                                                foreach (var key in item.values.Keys)
+                                                {
+                                                    list.Add(new TranslateItem() { itemData = item, key = key });
+                                                }
+                                                Translate(baseData, list);
                                             }
-                                            Translate(baseData, list);
                                         }
 
                                         bool allSet = true;
@@ -681,74 +689,112 @@ namespace UnityEditor.Localizations
             public ItemData itemData;
             public string key;
         }
+
+        int translateCurrent;
+        bool isTranslateDone;
+        int translateChanged;
+        bool translateCanceled;
         void Translate(ItemData baseData, List<TranslateItem> items)
-        {
+        { 
+            EditorCoroutineUtility.StartCoroutine(_Translate(baseData, items), this);
+        }
+        IEnumerator _Translate(ItemData baseData, List<TranslateItem> items)
+        { 
             int total = items.Count;
-            int current = -1;
             if (total == 0)
             {
-                return;
+                yield break;
+            }
+             
+            HashSet<ItemData> changeds = new HashSet<ItemData>();
+            translateCurrent = 0;
+            isTranslateDone = false;
+            translateChanged = 0;
+            translateCanceled = false;
+            EditorCoroutineUtility.StartCoroutine(TranslateRunner(baseData, items, changeds), this);
+             
+            while (!isTranslateDone)
+            {
+                var item = items[translateCurrent];
+                if (EditorUtility.DisplayCancelableProgressBar("Translate", $"{baseData.lang} > {item.itemData.lang} [{translateCurrent}/{total}]", translateCurrent / (float)total))
+                {
+                    translateCanceled = true;
+                }
+                yield return null;
             }
 
-            int changed = 0;
-            Action next = null;
-            HashSet<ItemData> changeds = new HashSet<ItemData>();
-            next = () =>
+            if (changeds.Count > 0)
             {
-                current++;
-                if (current >= total)
+                foreach (var data in changeds)
                 {
-                    foreach (var it in changeds)
-                    {
-                        DirtyData(it);
-                    }
-                    EditorUtility.ClearProgressBar();
-                    return;
+                    DirtyData(data);
                 }
-
-                var item = items[current];
-
-                if (!baseData.values.ContainsKey(item.key))
-                {
-                    Debug.LogError("base data not contains key: " + item.key);
-                    current = total;
-                    next();
-                    return;
-                }
-
-                if (!item.itemData.values.ContainsKey(item.key))
-                {
-                    next();
-                    return;
-                }
-                string srcText = (string)baseData.values[item.key].Value;
-                var value = item.itemData.values[item.key];
-                EditorUtility.DisplayProgressBar("Translate", $"{baseData.lang} > {item.itemData.lang} [{current}/{total}]", current / (float)total);
-                GoogleTranslator.Process(baseData.lang, item.itemData.lang, srcText, (b, result) =>
-                {
-                    if (!b)
-                    {
-                        Debug.LogError("key: " + item.key + ", lang: " + item.itemData.lang);
-                        current = total;
-                        next();
-                        return;
-                    }
-
-                    if (!object.Equals(value.Value, result))
-                    {
-                        value.Value = result;
-                        item.itemData.values[item.key] = value;
-                        changed++;
-                        if (!changeds.Contains(item.itemData))
-                            changeds.Add(item.itemData);
-                    }
-
-                    next();
-                });
-            };
-            next();
+            }
+            EditorUtility.ClearProgressBar();
+            Debug.Log($"Translate complete total: {total}, chagned: {translateChanged}");
         }
 
+        IEnumerator TranslateRunner(ItemData baseData, List<TranslateItem> items, HashSet<ItemData> changeds)
+        {
+            try
+            {
+                for (int i = 0; i < items.Count; i++)
+                {
+                    if (translateCanceled)
+                        break;
+                    var item = items[i];
+                    translateCurrent = i;
+                    if (!baseData.values.ContainsKey(item.key))
+                    {
+                        Debug.LogError("base data not contains key: " + item.key);
+                        continue;
+                    }
+
+                    if (!item.itemData.values.ContainsKey(item.key))
+                    {
+                        continue;
+                    }
+                    string srcText = (string)baseData.values[item.key].Value;
+                    var value = item.itemData.values[item.key];
+
+
+                    ILanguageTranslator translator = EditorLocalizationUtility.GetLanguageTranslator(baseData.lang, item.itemData.lang);
+                    if (translator == null)
+                    {
+                        continue;
+                    }
+                    AsyncResult<string> asyncResult = new AsyncResult<string>();
+                    var task = translator.TranslateLanguage(baseData.lang, item.itemData.lang, srcText);
+                    yield return new WaitUntil(() => task.IsCompleted);
+                    Debug.Assert(task.IsCompleted);
+                    try
+                    {
+                        string result = task.Result;
+                        Debug.Log($"Translate [{translator.GetType().Name}] [{baseData.lang}] => [{item.itemData.lang}]\n" + srcText + "\nResult\n" + result);
+                        if (!string.IsNullOrEmpty(result) && !object.Equals(value.Value, result))
+                        {
+                            value.Value = result;
+                            item.itemData.values[item.key] = value;
+                            translateChanged++;
+                            if (!changeds.Contains(item.itemData))
+                                changeds.Add(item.itemData);
+                        }
+
+                    }
+                    catch (Exception e)
+                    {
+                        isTranslateDone = true;
+                        Debug.LogException(e);
+                        yield break;
+                    }
+
+                }
+            }
+            finally
+            {
+                isTranslateDone = true;
+            }
+        }
 
         void GUILangStatus()
         {
@@ -759,7 +805,7 @@ namespace UnityEditor.Localizations
 
                 PopupLang(allLangNames, expandWidth: false);
 
-                GUILayout.Label($"{"Default".Localization()}[{Localization.DefaultLang}] {"CurrentUICulture".Localization()}[{Thread.CurrentThread.CurrentUICulture.Name}] {"CurrentCulture".Localization()}[{ Thread.CurrentThread.CurrentCulture.Name}] {"systemLanguage".Localization()}[{Application.systemLanguage}]");
+                GUILayout.Label($"{"Default".Localization()}[{Localization.DefaultLang}] {"CurrentUICulture".Localization()}[{Thread.CurrentThread.CurrentUICulture.Name}] {"CurrentCulture".Localization()}[{Thread.CurrentThread.CurrentCulture.Name}] {"systemLanguage".Localization()}[{Application.systemLanguage}]");
             }
         }
 
@@ -791,7 +837,7 @@ namespace UnityEditor.Localizations
                 searchKey = GUIUtilityx.SearchTextField(searchKey, GUIContent.none, GUILayout.Width(EditorGUIUtility.labelWidth));
 
                 int typeNameIndex = 0;
-                string[] typeNames = EditorLocalization.GetValueTypeNames().ToArray();
+                string[] typeNames = EditorLocalizationUtility.GetValueTypeNames().ToArray();
                 for (int i = 0; i < typeNames.Length; i++)
                 {
                     if (typeNames[i] == newValueTypeName)
@@ -949,6 +995,7 @@ namespace UnityEditor.Localizations
 
                         if (GUILayout.Button("T", TranslateButtonStyle, GUILayout.ExpandWidth(false)))
                         {
+
                             List<TranslateItem> list = new List<TranslateItem>();
                             foreach (var itemData in itemDatas)
                             {
@@ -997,10 +1044,10 @@ namespace UnityEditor.Localizations
         void GUIItemNode(ItemData item, string key, LocalizationValue value, int itemIndex)
         {
             ILocalizationValueDrawer drawer;
-            drawer = EditorLocalization.GetValueDrawer(value.TypeName);
+            drawer = EditorLocalizationUtility.GetValueDrawer(value.TypeName);
             if (drawer == null)
             {
-                drawer = EditorLocalization.GetValueDrawer("string");
+                drawer = EditorLocalizationUtility.GetValueDrawer("string");
             }
 
             bool ineritValue = !item.values.ContainsKey(key);
@@ -1014,7 +1061,9 @@ namespace UnityEditor.Localizations
                 {
                     if (GUILayout.Button("T", TranslateButtonStyle, GUILayout.ExpandWidth(false)))
                     {
+
                         Translate(baseData, new List<TranslateItem>() { new TranslateItem() { itemData = item, key = key } });
+
                         //EditorUtility.DisplayProgressBar("Translate", "", 0f);
 
                         //GoogleTranslator.Process(itemDatas[0].lang, item.lang, (string)baseData.values[key].Value, (b, result) =>

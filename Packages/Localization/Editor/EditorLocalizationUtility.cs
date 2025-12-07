@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Localizations;
 
@@ -10,9 +12,9 @@ namespace UnityEditor.Localizations
 {
     using Localization = UnityEngine.Localizations.Localization;
 
-    public static class EditorLocalization
+    public static class EditorLocalizationUtility
     {
-       public const string RootNodeName = "localization";
+        public const string RootNodeName = "localization";
         public const string XMLNS = "urn:schema-localization";
 
         public const string MenuPrefix = "Window/General/";
@@ -37,7 +39,7 @@ namespace UnityEditor.Localizations
             get
             {
                 if (editorLocalizationValues == null)
-                    editorLocalizationValues =new LocalizationValues( new DirectoryLocalizationLoader(Path.Combine(PackageDir, "Editor/Localization")));
+                    editorLocalizationValues = new LocalizationValues(new DirectoryLocalizationLoader(Path.Combine(PackageDir, "Editor/Localization")));
                 return editorLocalizationValues;
             }
         }
@@ -78,7 +80,7 @@ namespace UnityEditor.Localizations
             public string name;
         }
 
-        private static Dictionary<string,ILocalizationValueDrawer> GetValueDrawers()
+        private static Dictionary<string, ILocalizationValueDrawer> GetValueDrawers()
         {
             if (valueDrawers == null)
             {
@@ -101,7 +103,7 @@ namespace UnityEditor.Localizations
 
         public static IEnumerable<string> GetValueTypeNames()
         {
-            return  GetValueDrawers().Select(o => o.Key)
+            return GetValueDrawers().Select(o => o.Key)
              .OrderBy(o => o)
              .OrderBy(o => o == "string" ? 0 : 1);
         }
@@ -114,5 +116,56 @@ namespace UnityEditor.Localizations
                 return null;
             return valueDrawer;
         }
+
+
+        static List<ILanguageTranslator> languageTranslators;
+        static Dictionary<string, ILanguageTranslator> translatorsMap;
+
+        public static List<ILanguageTranslator> GetLanguageTranslators()
+        {
+            if (languageTranslators != null)
+                return languageTranslators;
+
+            languageTranslators = new List<ILanguageTranslator>();
+            foreach (var type in TypeCache.GetTypesDerivedFrom<ILanguageTranslator>())
+            {
+                if (type.IsAbstract) continue;
+                if (type.GetConstructor(Type.EmptyTypes) == null) continue;
+                ILanguageTranslator translator = Activator.CreateInstance(type) as ILanguageTranslator;
+                languageTranslators.Add(translator);
+            }
+            languageTranslators.Sort((a, b) => -(a.Priority - b.Priority));
+            return languageTranslators;
+        }
+
+        public static ILanguageTranslator GetLanguageTranslator(string sourceLang, string targetLang)
+        {
+            if (translatorsMap == null)
+                translatorsMap = new Dictionary<string, ILanguageTranslator>();
+            string key = sourceLang + "+" + targetLang;
+            ILanguageTranslator translator = null;
+            if (!translatorsMap.TryGetValue(key, out translator))
+            {
+                foreach (var t in GetLanguageTranslators())
+                {
+                    if (t.CanTranslateLanguage(sourceLang, targetLang))
+                    {
+                        translator = t;
+                        break;
+                    }
+                }
+                translatorsMap[key] = translator;
+            }
+            return translator;
+        }
+
+        public static IEnumerator TaskToCorutine(Task task)
+        {
+            while (!task.IsCompleted)
+            {
+                yield return null;
+            }
+        }
+
     }
 }

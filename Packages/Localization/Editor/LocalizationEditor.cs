@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System;
 using UnityEngine.Localizations;
+using System.Threading.Tasks;
 
 namespace UnityEditor.Localizations
 {
@@ -33,6 +34,9 @@ namespace UnityEditor.Localizations
         //    UnityEngine.Localizations.Localization.LoadLang(Localization.CurrentLang);
         //}
 
+
+    
+    
 
         public override void OnInspectorGUI()
         {
@@ -90,7 +94,7 @@ namespace UnityEditor.Localizations
             {
                 hasKey = true;
             }
-            var editorLocalization = EditorLocalization.EditorLocalizationValues;
+            var editorLocalization = EditorLocalizationUtility.EditorLocalizationValues;
             using (editorLocalization.BeginScope())
             {
                 using (var checker = new EditorGUI.ChangeCheckScope())
