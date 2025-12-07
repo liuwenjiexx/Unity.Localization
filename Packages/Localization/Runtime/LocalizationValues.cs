@@ -11,7 +11,7 @@ namespace UnityEngine.Localizations
 
 
         private Dictionary<string, IDictionary<string, LocalizationValue>> cached;
-
+        private Dictionary<string, string> defaultValue2Key;
         public bool IsInitialized { get; private set; }
 
         //List 支持顺序
@@ -69,7 +69,20 @@ namespace UnityEngine.Localizations
                     {
                         cached[part] = content;
 
-                        if (part != Localization.DefaultLang && !Localization.BaseLangMapping.ContainsKey(part))
+                        if (part == LocalizationSettings.DefaultLang)
+                        {
+                            if (defaultValue2Key == null)
+                                defaultValue2Key = new Dictionary<string, string>();
+                            defaultValue2Key.Clear();
+                            foreach (var item in content)
+                            {
+                                string strValue = item.Value.StringValue;
+                                if (string.IsNullOrEmpty(strValue))
+                                    continue;
+                                defaultValue2Key[strValue] = item.Key;
+                            }
+                        }
+                        else if (!Localization.BaseLangMapping.ContainsKey(part))
                         {
                             Localization.BaseLangMapping[part] = baseLang;
                         }
@@ -208,6 +221,36 @@ namespace UnityEngine.Localizations
         }
 
         #endregion
+
+        public bool TryGetKey(string defaultValue, out string key)
+        {
+            if (defaultValue2Key == null || defaultValue == null)
+            {
+                key = null;
+                return false;
+            }
+            return defaultValue2Key.TryGetValue(defaultValue, out key);
+        }
+
+        public bool TryGetValueByDefault(string defaultValue, out string value)
+        {
+            if (defaultValue2Key == null || defaultValue == null)
+            {
+                value = null;
+                return false;
+            }
+            string key;
+            if (defaultValue2Key.TryGetValue(defaultValue, out key))
+            {
+                if (TryGetValue(Localization.CurrentLang, key, out var v))
+                {
+                    value = v.StringValue;
+                    return true;
+                }
+            }
+            value = null;
+            return false;
+        }
 
 
         public IDisposable BeginScope(string lang = null)

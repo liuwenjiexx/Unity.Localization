@@ -98,6 +98,10 @@ public class LocalizationSettings
                     if (Localization.currentLang != lang)
                     {
                         Localization.LoadLang(Localization.currentLang);
+                        if (UpdateOnLanguageChagned)
+                        {
+                            Localization. UpdateAllLocalization();
+                        }
                     }
                 }
             }
@@ -105,4 +109,10 @@ public class LocalizationSettings
     }
 
 
+    private static Setting<string> defaultLang = new(Settings, nameof(DefaultLang), "en", SettingsScope.RuntimeProject);
+    public static string DefaultLang
+    {
+        get => defaultLang.Value;
+        set => defaultLang.SetValueWithCheck(value, true);
+    }
 }

@@ -27,17 +27,21 @@ namespace UnityEditor.Localizations
             Localization.LoadLang(Localization.CurrentLang);
         }
 
-        [InitializeOnLoadMethod]
-        static void InitializeOnLoadMethod()
-        {
-            UnityEngine.Localizations.Localization.LoadLang(Localization.CurrentLang);
-        }
+        //[InitializeOnLoadMethod]
+        //static void InitializeOnLoadMethod()
+        //{
+        //    UnityEngine.Localizations.Localization.LoadLang(Localization.CurrentLang);
+        //}
 
 
         public override void OnInspectorGUI()
         {
 
-
+            if (!Localization.IsInitialized)
+            {
+                base.OnInspectorGUI();
+                return;
+            }
 
             int selectedIndex = -1;
             for (int i = 0; i < Localization.SupportedLanguages.Count; i++)
@@ -75,6 +79,7 @@ namespace UnityEditor.Localizations
                     else
                         LocalizationSettings.SelectedLang = Localization.SupportedLanguages[newIndex].Name;
                     Localization.LoadLang(Localization.CurrentLang);
+                    Localization.UpdateAllLocalization();
                 }
 
             }
@@ -99,6 +104,10 @@ namespace UnityEditor.Localizations
 
                     if (!hasKey)
                     {
+                        if (GUILayout.Button("+"))
+                        {
+                            Debug.Log("?");
+                        }
                         EditorGUILayout.HelpBox(string.Format(editorLocalization.GetString("MissingKeyError"), key), MessageType.Error);
                     }
 

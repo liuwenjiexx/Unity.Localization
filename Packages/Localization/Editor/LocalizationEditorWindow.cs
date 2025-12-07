@@ -450,6 +450,9 @@ namespace UnityEditor.Localizations
                                     {
                                     }*/
 
+                                    if (selectedIndex < 0)
+                                        selectedIndex = 0;
+
                                     if (GUILayout.Button("×", "label", GUILayout.ExpandWidth(false)))
                                     {
                                         //RemoveItem(i);

@@ -23,7 +23,7 @@ namespace UnityEngine.Localizations
         {
           new  ("en", "English" ),
            new ("zh","中文" ),
-             new ("zh-TW", "正體字" )
+             new ("zh-TW", "繁體中文" )
         };
 
         public int Priority => 1;
@@ -83,15 +83,17 @@ namespace UnityEngine.Localizations
               {"zh-TW","正體字" }
         };
 
-     
+
         // Start is called before the first frame update
         void Start()
         {
             //Debug.Log(typeof(LocalizationDataLoader).AssemblyQualifiedName);
 
-
-            //初始化
-            Localization.Initialize();
+            if (!Localization.IsInitialized)
+            {
+                //初始化
+                InitializeLocalization();
+            }
 
             InitializeLanguageDropdown();
 
@@ -99,6 +101,24 @@ namespace UnityEngine.Localizations
             UpdateUI();
         }
 
+        static void InitializeLocalization()
+        {
+            var loader = new LocalizationDataLoader();
+            Localization.Default = new LocalizationValues(loader);
+            Localization.Initialize();
+        }
+
+        /*
+#if UNITY_EDITOR
+        [InitializeOnLoadMethod]
+        static void InitializeOnLoadMethod()
+        {
+            if (!Localization.IsInitialized)
+            {
+                InitializeLocalization();
+            }
+        }
+#endif*/
         /// <summary>
         /// 初始化语言选项下拉列表
         /// </summary>

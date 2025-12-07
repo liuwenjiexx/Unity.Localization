@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
-using UnityEngine.UI;
 using System.Linq;
-using System.Xml;
 using System.Text;
-using System.Collections.ObjectModel;
+using System.Threading;
+using System.Xml;
+using TMPro;
+using UnityEngine.UI;
 
 namespace UnityEngine.Localizations
 {
@@ -16,6 +16,10 @@ namespace UnityEngine.Localizations
     {
         [SerializeField]
         public string key;
+
+        [NonSerialized]
+        private string hintKey;
+
         [HideInInspector]
         [TextArea]
         public string format;
@@ -37,26 +41,34 @@ namespace UnityEngine.Localizations
         private static LocalizationValues current;
 
 
-        public static IReadOnlyList<LanguageInfo> SupportedLanguages { get => Current.SupportedLanguages; }
-
+        public static IReadOnlyList<LanguageInfo> SupportedLanguages
+        {
+            get
+            {
+                if (!IsInitialized)
+                    return new LanguageInfo[0];
+                return Current.SupportedLanguages;
+            }
+        }
 
         internal static List<LocalizationValues> All { get; private set; } = new List<LocalizationValues>();
 
-        private static string defaultLang;
+        //private static string defaultLang;
         public static string DefaultLang
         {
             get
             {
-                return defaultLang;
+                //return defaultLang;
+                return LocalizationSettings.DefaultLang;
             }
-            set
-            {
-                if (defaultLang != value)
-                {
-                    defaultLang = value;
-                    currentLang = GetSupportedLang();
-                }
-            }
+            //set
+            //{
+            //    if (defaultLang != value)
+            //    {
+            //        defaultLang = value;
+            //        currentLang = GetSupportedLang();
+            //    }
+            //}
         }
 
         public static string ExtensionName { get; private set; } = "lang.xml";
@@ -83,7 +95,7 @@ namespace UnityEngine.Localizations
         //   static ConfigProperty langConfig = new ConfigProperty(localization_current_key, typeof(string), null);
 
         /// <summary>
-        /// 优先级 <see cref="SelectedLang"/>, <see cref="DefaultLang"/> <see cref="Thread.CurrentUICulture"/> <see cref="Thread.CurrentCulture"/>, <see cref="Application.systemLanguage"/>, <see cref="DefaultLang"/>
+        /// 优先级 <see cref="SelectedLang"/> <see cref="Thread.CurrentUICulture"/> <see cref="Thread.CurrentCulture"/>, <see cref="Application.systemLanguage"/>, <see cref="DefaultLang"/>
         /// </summary>
         public static string CurrentLang
         {
@@ -91,7 +103,10 @@ namespace UnityEngine.Localizations
             {
                 if (string.IsNullOrEmpty(currentLang))
                 {
-                    currentLang = GetSupportedLang();
+                    if (IsInitialized)
+                    {
+                        currentLang = GetSupportedLang();
+                    }
                 }
                 return currentLang;
             }
@@ -111,37 +126,37 @@ namespace UnityEngine.Localizations
         {
             get
             {
-                if (defaultLocal == null)
-                {
-                    ILocalizationLoader loader = null;
-                    /* foreach (var type in System.AppDomain.CurrentDomain.GetAssemblies()
-                         .Referenced(typeof(LocalizationValues).Assembly)
-                         .SelectMany(o => o.GetTypes())
-                         .Where(o => !o.IsAbstract && o.IsSubclassOf(typeof(ILocalizationLoader))))
-                     {
-                         var c= type.GetConstructor(Type.EmptyTypes);
-                         if (c == null)
-                             continue;
-                         loader = Activator.CreateInstance(type) as ILocalizationLoader;
-                         break;
-                     }*/
+                //if (defaultLocal == null)
+                //{
+                //    ILocalizationLoader loader = null;
+                //    /* foreach (var type in System.AppDomain.CurrentDomain.GetAssemblies()
+                //         .Referenced(typeof(LocalizationValues).Assembly)
+                //         .SelectMany(o => o.GetTypes())
+                //         .Where(o => !o.IsAbstract && o.IsSubclassOf(typeof(ILocalizationLoader))))
+                //     {
+                //         var c= type.GetConstructor(Type.EmptyTypes);
+                //         if (c == null)
+                //             continue;
+                //         loader = Activator.CreateInstance(type) as ILocalizationLoader;
+                //         break;
+                //     }*/
 
-                    Type loaderType = LocalizationSettings.CustomLoaderType;
-                    if (loaderType != null)
-                    {
-                        loader = Activator.CreateInstance(loaderType) as ILocalizationLoader;
-                    }
-                    else if (!string.IsNullOrEmpty(LocalizationSettings.CustomLoaderTypeName))
-                    {
-                        Debug.LogError("Localization Not found type: " + LocalizationSettings.CustomLoaderTypeName);
-                    }
-                    if (loader == null && !string.IsNullOrEmpty(LocalizationSettings.ResourcesPath))
-                        loader = new ResourcesLocalizationLoader(LocalizationSettings.ResourcesPath);
-                    if (loader == null)
-                        throw new Exception($"Localization {nameof(ILocalizationLoader)} null");
+                //    Type loaderType = LocalizationSettings.CustomLoaderType;
+                //    if (loaderType != null)
+                //    {
+                //        loader = Activator.CreateInstance(loaderType) as ILocalizationLoader;
+                //    }
+                //    else if (!string.IsNullOrEmpty(LocalizationSettings.CustomLoaderTypeName))
+                //    {
+                //        Debug.LogError("Localization Not found type: " + LocalizationSettings.CustomLoaderTypeName);
+                //    }
+                //    if (loader == null && !string.IsNullOrEmpty(LocalizationSettings.ResourcesPath))
+                //        loader = new ResourcesLocalizationLoader(LocalizationSettings.ResourcesPath);
+                //    if (loader == null)
+                //        throw new Exception($"Localization {nameof(ILocalizationLoader)} null");
 
-                    defaultLocal = new LocalizationValues(loader);
-                }
+                //    defaultLocal = new LocalizationValues(loader);
+                //}
                 return defaultLocal;
             }
 
@@ -161,7 +176,7 @@ namespace UnityEngine.Localizations
             }
             set => current = value;
         }
-
+        /*
         public static string GetDefaultLang()
         {
             string lang;
@@ -196,6 +211,7 @@ namespace UnityEngine.Localizations
                 lang = "en";
             return lang;
         }
+        */
         public static string GetSupportedLang()
         {
             return GetSupportedLang(SupportedLanguages);
@@ -261,36 +277,106 @@ namespace UnityEngine.Localizations
              }
              isDiried = false;
              */
-            if (!string.IsNullOrEmpty(key))
-            {
+            TextMeshProUGUI textMeshPro = null;
+            Text text = null;
 
-                string value = GetString(key);
-                if (!string.IsNullOrEmpty(format))
-                    value = string.Format(format, value);
-                Text text = GetComponent<Text>();
-                if (text)
+            textMeshPro = GetComponent<TextMeshProUGUI>();
+            if (!textMeshPro)
+            {
+                text = GetComponent<Text>();
+            }
+
+            if (!textMeshPro && !text)
+                return;
+
+            string findKey = this.key?.Trim();
+
+
+            if (string.IsNullOrEmpty(findKey))
+            {
+                if (!Application.isPlaying)
+                    return;
+                if (string.IsNullOrEmpty(hintKey))
                 {
-                    text.text = value;
-#if UNITY_EDITOR
-                    if (text.enabled)
+                    //值作为 key
+                    if (textMeshPro)
                     {
-                        text.enabled = false;
-                        text.enabled = true;
+                        hintKey = textMeshPro.text?.Trim();
                     }
-#endif
+                    else if (text)
+                    {
+                        hintKey = text.text?.Trim();
+                    }
+                }
+                findKey = hintKey;
+            }
+
+            string value = null;
+
+            if (!string.IsNullOrEmpty(findKey))
+            {
+                if (!Current.TryGetValue(CurrentLang, findKey, out var v))
+                {
                     return;
                 }
+                value = v.StringValue;
             }
-            else
+            /*  else
+              {
+                  if (!Application.isPlaying)
+                      return;
+                  if (string.IsNullOrEmpty(hintKey))
+                  {
+                      if (textMeshPro)
+                      {
+                          hintKey = textMeshPro.text?.Trim();
+                      }
+                      else if (text)
+                      {
+                          hintKey = text.text?.Trim();
+                      }
+                  }
+
+                  if (!string.IsNullOrEmpty(hintKey))
+                  {
+                      if (!Current.TryGetValueByDefault(hintKey, out value))
+                          return;
+                  }
+
+              }*/
+
+            if (!string.IsNullOrEmpty(format))
+                value = string.Format(format, value);
+
+
+            if (textMeshPro)
             {
-                Debug.LogError("Localization key null, gameobject:" + name);
+                textMeshPro.text = value;
+                return;
             }
+
+            if (text)
+            {
+                text.text = value;
+#if UNITY_EDITOR
+                if (text.enabled)
+                {
+                    text.enabled = false;
+                    text.enabled = true;
+                }
+#endif
+                return;
+            }
+
+            //else
+            //{
+            //    //Debug.LogError("Localization key null, gameobject:" + name);
+            //}
         }
 
         public static void Initialize()
         {
-            if (IsInitialized)
-                return;
+            //Debug.Log("Lang Initialize");
             IsInitialized = true;
             MainThreadId = Thread.CurrentThread.ManagedThreadId;
             currentLang = null;
@@ -301,14 +387,18 @@ namespace UnityEngine.Localizations
 
             if (!Application.isEditor)
                 Debug.Log($"Initalized Default <{Default}> Lang <{CurrentLang}> LangNames <{SupportedLanguages.Count}> systemLanguage <{Application.systemLanguage}> Thread CurrentCulture <{Thread.CurrentThread.CurrentCulture.Name}>");
+
+            UpdateAllLocalization();
         }
 
 
 
         public static void LoadLang(string lang)
         {
-
-            Initialize();
+            //Debug.Log("Load Lang: " + lang);
+            //Initialize();
+            if (!IsInitialized)
+                return;
             string oldLang = Current.Lang;
             if (oldLang == lang)
                 return;
@@ -329,22 +419,33 @@ namespace UnityEngine.Localizations
                 //{
                 //    item.OnChanged();
                 //}
-                if (LocalizationSettings.UpdateOnLanguageChagned)
-                {
-                    var items = Object.FindObjectsByType<Localization>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-                    foreach (var item in items)
-                    {
-                        item.OnChanged();
-                    }
-                }
+
             }
 
         }
 
+        public static void UpdateAllLocalization()
+        {
+            var items = Object.FindObjectsByType<Localization>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            HashSet<RectTransform> rootSet = new();
+            foreach (var item in items)
+            {
+                item.OnChanged();
+                var root = item.GetComponentInParent<HorizontalOrVerticalLayoutGroup>();
+                if (root)
+                    rootSet.Add((RectTransform)root.transform);
+            }
+            foreach (var root in rootSet)
+            {
+                if (!root) continue;
+                LayoutRebuilder.ForceRebuildLayoutImmediate(root);
+            }
+        }
+
         private void OnEnable()
         {
-            Debug.Log(name + " OnEnable");
             //if (isDiried)
+            if (IsInitialized)
             {
                 OnChanged();
                 if (Application.isPlaying)
@@ -475,6 +576,8 @@ namespace UnityEngine.Localizations
 
         public static string GetString(string key)
         {
+            if (!IsInitialized)
+                return key;
             return Current.GetString(key);
         }
 
