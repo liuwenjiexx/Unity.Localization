@@ -20,11 +20,13 @@ namespace UnityEditor.Localizations
 
         SerializedProperty keyProperty;
         SerializedProperty formatPropery;
+        SerializedProperty rebuildLayoutPropery;
 
         private void OnEnable()
         {
             keyProperty = serializedObject.FindProperty("key");
             formatPropery = serializedObject.FindProperty("format");
+            rebuildLayoutPropery = serializedObject.FindProperty("rebuildLayout");
             Localization.LoadLang(Localization.CurrentLang);
         }
 
@@ -134,8 +136,10 @@ namespace UnityEditor.Localizations
                     }
                 }
 
+                EditorGUILayout.PropertyField(rebuildLayoutPropery);
                 serializedObject.ApplyModifiedProperties();
             }
+
         }
 
 

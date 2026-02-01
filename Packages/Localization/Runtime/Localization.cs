@@ -37,6 +37,8 @@ namespace UnityEngine.Localizations
             }
         }
 
+        public bool rebuildLayout;
+
 
         private static LocalizationValues current;
 
@@ -218,47 +220,87 @@ namespace UnityEngine.Localizations
         }
         public static string GetSupportedLang(IEnumerable<LanguageInfo> supportedLangs)
         {
-            string lang;
+            string lang, matchLang = null;
+            List<string> matchLangs = new List<string>();
 
-            lang = LocalizationSettings.SelectedLang;
-            if (!string.IsNullOrEmpty(lang) && supportedLangs.Any(_ => _.Name == lang))
+            matchLang = LocalizationSettings.SelectedLang;
+            if (!string.IsNullOrEmpty(matchLang))
             {
-                return lang;
+                if (!matchLangs.Contains(matchLang))
+                    matchLangs.Add(matchLang);
             }
-
 
             Thread thread = Thread.CurrentThread;
             if (thread.CurrentUICulture != null && !string.IsNullOrEmpty(thread.CurrentUICulture.Name))
             {
-                lang = thread.CurrentUICulture.Name;
-                if (supportedLangs.Any(_ => _.Name == lang))
-                {
-                    return lang;
-                }
+                matchLang= thread.CurrentUICulture.Name;
+                if (!matchLangs.Contains(matchLang))
+                    matchLangs.Add(matchLang);
+
             }
             if (thread.CurrentCulture != null && !string.IsNullOrEmpty(thread.CurrentCulture.Name))
             {
-                lang = thread.CurrentCulture.Name;
-                if (supportedLangs.Any(_ => _.Name == lang))
+                matchLang = thread.CurrentCulture.Name;
+                if (!matchLangs.Contains(matchLang))
+                    matchLangs.Add(matchLang);
+            }
+
+            matchLang = SystemLanguageToLangName(Application.systemLanguage);
+            if (!string.IsNullOrEmpty(matchLang))
+            {
+                if (!matchLangs.Contains(matchLang))
+                    matchLangs.Add(matchLang);
+            }
+
+
+            lang = null;
+            matchLang = null;
+            for (int i = 0; i < matchLangs.Count; i++)
+            {
+                matchLang = matchLangs[i];
+                foreach (var supportedLang in supportedLangs)
                 {
-                    return lang;
+                    if (string.Equals(supportedLang.Name, matchLang, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        lang = supportedLang.Name;
+                        break;
+                    }
+                }
+                if (!string.IsNullOrEmpty(lang))
+                    break;
+            }
+
+            if (string.IsNullOrEmpty(lang))
+            {
+                matchLang = null;
+                for (int i = 0; i < matchLangs.Count; i++)
+                {
+                    matchLang = matchLangs[i];
+                    int index = matchLang.IndexOf("-");
+                    if (index < 0) continue;
+                    matchLang = matchLang.Substring(0, index);
+                    foreach (var supportedLang in supportedLangs)
+                    {
+                        if (string.Equals(supportedLang.Name, matchLang, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            lang = supportedLang.Name;
+                            break;
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(lang))
+                        break;
                 }
             }
 
+            if (string.IsNullOrEmpty(lang))
             {
-                lang = SystemLanguageToLangName(Application.systemLanguage);
-                if (supportedLangs.Any(_ => _.Name == lang))
+                matchLang = DefaultLang;
+                if (!string.IsNullOrEmpty(matchLang))
                 {
-                    return lang;
-                }
-            }
-
-            if (!string.IsNullOrEmpty(DefaultLang))
-            {
-                lang = DefaultLang;
-                if (supportedLangs.Any(_ => _.Name == lang))
-                {
-                    return lang;
+                    if (supportedLangs.Any(_ => _.Name == matchLang))
+                    {
+                        lang = matchLang;
+                    }
                 }
             }
 
@@ -351,13 +393,21 @@ namespace UnityEngine.Localizations
 
             if (textMeshPro)
             {
-                textMeshPro.text = value;
+                if (textMeshPro.text != value)
+                {
+                    textMeshPro.text = value;
+                    OnChange();
+                }
                 return;
             }
 
             if (text)
             {
-                text.text = value;
+                if (text.text != value)
+                {
+                    text.text = value;
+                    OnChange();
+                }
 #if UNITY_EDITOR
                 if (text.enabled)
                 {
@@ -372,6 +422,18 @@ namespace UnityEngine.Localizations
             //{
             //    //Debug.LogError("Localization key null, gameobject:" + name);
             //}
+        }
+
+        void OnChange()
+        {
+            if (rebuildLayout)
+            {
+             /* var layout=  GetComponentInParent<LayoutGroup>();
+                if (layout)
+                {
+                    LayoutRebuilder.MarkLayoutForRebuild((RectTransform)layout.transform);
+                }*/
+            }
         }
 
         public static void Initialize()
