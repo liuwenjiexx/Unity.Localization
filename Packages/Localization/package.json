@@ -10,6 +10,7 @@
   ],
   "category": "Unity",
   "description": "Localization, Multi Language",
+  "hideInEditor": false,
   "dependencies": {
     "com.unity.settings": "0.0.7",
     "com.unity.editorcoroutines": "1.0.0"

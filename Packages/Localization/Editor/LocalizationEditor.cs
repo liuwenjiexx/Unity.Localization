@@ -37,8 +37,8 @@ namespace UnityEditor.Localizations
         //}
 
 
-    
-    
+
+
 
         public override void OnInspectorGUI()
         {
@@ -61,7 +61,7 @@ namespace UnityEditor.Localizations
 
             using (new GUILayout.HorizontalScope())
             {
-                EditorGUILayout.PrefixLabel(new GUIContent(Localization.CurrentLang ?? string.Empty, $"({ Localization.Current.GetType().Name})"));
+                EditorGUILayout.PrefixLabel(new GUIContent(Localization.CurrentLang ?? string.Empty, $"({Localization.Current.GetType().Name})"));
                 int newIndex = selectedIndex;
                 if (GUILayout.Button("<", GUILayout.ExpandWidth(false)))
                 {
@@ -117,11 +117,11 @@ namespace UnityEditor.Localizations
                         EditorGUILayout.HelpBox(string.Format(editorLocalization.GetString("MissingKeyError"), key), MessageType.Error);
                     }
 
-                    //using (new GUILayout.HorizontalScope())
-                    //{
-                    //    EditorGUILayout.PrefixLabel(editorLocalization.GetString( "Format"));
-                    //    formatPropery.stringValue = EditorGUILayout.TextArea(formatPropery.stringValue, GUILayout.Height(30));
-                    //}
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        EditorGUILayout.PrefixLabel(new GUIContent(editorLocalization.GetString("Format"), "format: {0}"));
+                        formatPropery.stringValue = EditorGUILayout.TextArea(formatPropery.stringValue, GUILayout.Height(30));
+                    }
                     if (checker.changed)
                     {
                         serializedObject.ApplyModifiedProperties();

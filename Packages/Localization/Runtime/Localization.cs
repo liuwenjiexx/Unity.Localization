@@ -20,10 +20,16 @@ namespace UnityEngine.Localizations
         [NonSerialized]
         private string hintKey;
 
-        [HideInInspector]
+        //[HideInInspector]
         [TextArea]
         public string format;
         private bool isDiried;
+        /// <summary>
+        /// Format: {0} 
+        /// </summary>
+        /// <example>
+        /// {0} Lv => Player Lv
+        /// </example>
         public string Format
         {
             get => format;
@@ -357,11 +363,17 @@ namespace UnityEngine.Localizations
 
             if (!string.IsNullOrEmpty(findKey))
             {
-                if (!Current.TryGetValue(CurrentLang, findKey, out var v))
+                if (Current.TryGetValue(CurrentLang, findKey, out var v))
                 {
-                    return;
+                    value = v.StringValue;
                 }
-                value = v.StringValue;
+                else
+                {
+                    if (string.IsNullOrEmpty(this.key))
+                        return;
+                    value = key;
+                }
+       
             }
             /*  else
               {
@@ -616,7 +628,7 @@ namespace UnityEngine.Localizations
                         valueProviders.Add(provider.TypeName, provider);
                     }
                 }
-            }
+            } 
             ILocalizationValueProvider valueProvider;
             if (!valueProviders.TryGetValue(typeName, out valueProvider))
                 throw new Exception("not value type: " + typeName);

@@ -23,7 +23,7 @@ namespace UnityEditor.Localizations
         private static Dictionary<string, ILocalizationValueDrawer> valueDrawers;
         private static string packageDir;
         private static LocalizationValues editorLocalizationValues;
-
+        public const string KeyPrefix = XMLNS + ".";
 
         public static string PackageDir
         {
@@ -78,6 +78,31 @@ namespace UnityEditor.Localizations
         class UnityPackage
         {
             public string name;
+        }
+
+        public const string KEY_BASE_LANG = KeyPrefix + "BaseLang";
+        public static string BaseLang
+        {
+            get
+            {
+               return EditorPrefs.GetString(KEY_BASE_LANG, "en");
+            }
+            set
+            {
+                EditorPrefs.SetString(KEY_BASE_LANG, value);
+            }
+        }
+        public const string KEY_FIRST_LANG = KeyPrefix + "FirstLang";
+        public static string FirstLang
+        {
+            get
+            {
+                return EditorPrefs.GetString(KEY_FIRST_LANG, "en");
+            }
+            set
+            {
+                EditorPrefs.SetString(KEY_FIRST_LANG, value);
+            }
         }
 
         private static Dictionary<string, ILocalizationValueDrawer> GetValueDrawers()

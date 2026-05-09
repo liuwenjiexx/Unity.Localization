@@ -1,4 +1,5 @@
 ﻿using GluonGui.Dialog;
+using NUnit.Framework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -22,10 +23,10 @@ namespace UnityEditor.Localizations
         private bool isDataDirted;
 
         private ItemData baseData;
-        private ItemData[] itemDatas;
+        private List<ItemData> itemDatas = new();
 
-        private string[] allLangNames;
-        private string[] allLangPaths;
+        private const string Menu_All = "All";
+        private const string Menu_New = "New";
 
         string searchKey;
         bool isBaseDataDirted;
@@ -34,6 +35,7 @@ namespace UnityEditor.Localizations
         int itemHeight;
 
         static bool isLoaded;
+
 
 
         private void OnEnable()
@@ -48,22 +50,16 @@ namespace UnityEditor.Localizations
             {
                 titleContent = new GUIContent("Localization".Localization());
 
-                if (itemDatas == null)
-                    itemDatas = new ItemData[0];
                 if (baseData == null)
                     baseData = new ItemData();
 
                 baseData.Load();
-
+                RefreshItems();
                 foreach (var item in itemDatas)
                 {
                     item.Load();
                 }
-                if (allLangNames == null)
-                {
-                    allLangNames = new string[0];
-                    allLangPaths = new string[0];
-                }
+
                 EditorLocalizationUtility.GetValueDrawer("string");
             }
         }
@@ -85,8 +81,9 @@ namespace UnityEditor.Localizations
             if (HasItem(path))
                 return null;
             ItemData item = new ItemData() { path = path };
+            item.lang = Localization.ParseLangNameByFileName(path);
             item.Load();
-            ArrayUtility.Add(ref itemDatas, item);
+            itemDatas.Add(item);
             return item;
         }
 
@@ -102,60 +99,70 @@ namespace UnityEditor.Localizations
 
         public void RemoveItem(int itemIndex)
         {
-            if (itemIndex >= itemDatas.Length)
+            if (itemIndex >= itemDatas.Count)
                 return;
 
-            ArrayUtility.RemoveAt(ref itemDatas, itemIndex);
+            itemDatas.RemoveAt(itemIndex);
         }
 
 
         public void SelectBase(string dir)
         {
-            var allLangs = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-
+            List<string> allLangPaths = new();
             if (!string.IsNullOrEmpty(dir))
             {
                 foreach (var file in Localization.GetLocalizationFiles(dir))
                 {
-                    string lang = Localization.ParseLangNameByFileName(file);
-                    allLangs.Add(lang, file.ReplacePathSeparator());
+                    //item.lang = Localization.ParseLangNameByFileName(file);
+                    //item.path = file.ReplacePathSeparator();
+                    allLangPaths.Add(file.ReplacePathSeparator());
                 }
             }
 
-            var tmp = allLangs.OrderBy(o => o.Key).ToArray();
-            allLangNames = tmp.Select(o => o.Key).ToArray();
-            allLangPaths = tmp.Select(o => o.Value).ToArray();
-
-            if (string.IsNullOrEmpty(baseData.path))
+            string current = baseData.path;
+            if (string.IsNullOrEmpty(current))
             {
-                if (allLangs.ContainsKey("en"))
+                if (!string.IsNullOrEmpty(EditorLocalizationUtility.BaseLang))
                 {
-                    baseData.path = allLangs["en"];
+                    current = allLangPaths.FirstOrDefault(_ => Localization.ParseLangNameByFileName(_) == EditorLocalizationUtility.BaseLang);
                 }
-                else if (allLangs.ContainsKey("zh"))
+                if (current == null)
                 {
-                    baseData.path = allLangs["zh"];
+                    current = allLangPaths.FirstOrDefault(_ => Localization.ParseLangNameByFileName(_) == "en");
                 }
-                else
+                if (current == null)
                 {
-                    if (allLangs.Count > 0)
-                        baseData.path = allLangs.First().Value;
+                    current = allLangPaths.FirstOrDefault(_ => Localization.ParseLangNameByFileName(_) == "zh");
+                }
+                if (current != null)
+                {
+                    baseData.path = current;
                 }
             }
 
-            LoadBase(baseData.path);
+            LoadBase(current);
 
-            itemDatas = new ItemData[0];
             foreach (var path in allLangPaths)
             {
+                if (HasItem(path))
+                    continue;
                 var item = AddItem(path);
-                if (baseData.path == path)
-                {
-                    ShowIndex(item, 0);
-                }
+                //if (baseData.path == path)
+                //{
+                //    ShowIndex(item, 0);
+                //}
+            }
+
+            RefreshItems();
+        }
+        void RefreshItems()
+        {
+            itemDatas.Sort((a, b) => string.Compare(a.lang, b.lang));
+            if (!string.IsNullOrEmpty(EditorLocalizationUtility.FirstLang))
+            {
+                itemDatas.Sort((a, b) => (a.lang == EditorLocalizationUtility.FirstLang ? 0 : 1) - (b.lang == EditorLocalizationUtility.FirstLang ? 0 : 1));
             }
         }
-
         void ShowIndex(ItemData item, int index)
         {
             if (item.displayIndex == index)
@@ -223,7 +230,7 @@ namespace UnityEditor.Localizations
             return count;
         }
 
-
+        /*
         int FindIndexWithLangName(string lang)
         {
             int index = -1;
@@ -236,14 +243,28 @@ namespace UnityEditor.Localizations
                 }
             }
             return index;
-        }
+        }*/
+        //int FindIndexWithPath(string path)
+        //{
+        //    int index = -1;
+
+        //    for (int i = 0; i < allLangPaths.Count; i++)
+        //    {
+        //        if (string.Equals(allLangPaths[i].path, path, StringComparison.InvariantCultureIgnoreCase))
+        //        {
+        //            index = i;
+        //            break;
+        //        }
+        //    }
+        //    return index;
+        //}
         int FindIndexWithPath(string path)
         {
             int index = -1;
 
-            for (int i = 0; i < allLangPaths.Length; i++)
+            for (int i = 0; i < itemDatas.Count; i++)
             {
-                if (string.Equals(allLangPaths[i], path, StringComparison.InvariantCultureIgnoreCase))
+                if (string.Equals(itemDatas[i].path, path, StringComparison.InvariantCultureIgnoreCase))
                 {
                     index = i;
                     break;
@@ -252,10 +273,22 @@ namespace UnityEditor.Localizations
             return index;
         }
 
+        //LangItem FindLangItemWithPath(string path)
+        //{
+        //    for (int i = 0; i < allLangPaths.Count; i++)
+        //    {
+        //        if (string.Equals(allLangPaths[i].path, path, StringComparison.InvariantCultureIgnoreCase))
+        //        {
+        //            return allLangPaths[i];
+        //        }
+        //    }
+        //    return null;
+        //}
 
         void LoadBase(string path)
         {
             baseData.path = path;
+            baseData.lang = Localization.ParseLangNameByFileName(path);
             baseData.Load();
         }
 
@@ -409,21 +442,24 @@ namespace UnityEditor.Localizations
                     using (new GUILayout.HorizontalScope())
                     {
                         GUILangKeys();
-                        foreach (var item in itemDatas.OrderBy(o => o.displayIndex))
+                        int itemIndex = 0;
+                        int changeItemIndex = -1;
+                        int newItemIndex = -1;
+                        foreach (var item in itemDatas)
                         //for (int itemIndex = 0; itemIndex < itemDatas.Length; itemIndex++)
                         {
                             //var item = itemDatas[itemIndex];
-                            if (item.displayIndex < 0)
-                                continue;
-                            int itemIndex = -1;
-                            for (int i = 0; i < itemDatas.Length; i++)
-                            {
-                                if (itemDatas[i] == item)
-                                {
-                                    itemIndex = i;
-                                    break;
-                                }
-                            }
+                            //if (item.displayIndex < 0)
+                            //    continue;
+                            //int itemIndex = -1;
+                            //for (int i = 0; i < itemDatas.Count; i++)
+                            //{
+                            //    if (itemDatas[i] == item)
+                            //    {
+                            //        itemIndex = i;
+                            //        break;
+                            //    }
+                            //}
                             bool isBaseEditing = baseData.path == item.path;
 
                             using (new GUILayout.VerticalScope(GUILayout.Width(itemWidth)))
@@ -431,7 +467,7 @@ namespace UnityEditor.Localizations
 
                                 using (new GUILayout.HorizontalScope())
                                 {
-                                    int selectedIndex = FindIndexWithPath(item.path);
+                                    //var langItem = FindLangItemWithPath(item.path);
                                     /*
                                     //float width = (Screen.width - EditorGUIUtility.labelWidth) * 0.3f;
                                     //width = Mathf.Min(width, 150);
@@ -453,9 +489,8 @@ namespace UnityEditor.Localizations
                                     {
                                     }*/
 
-                                    if (selectedIndex < 0)
-                                        selectedIndex = 0;
 
+                                    /*
                                     if (GUILayout.Button("×", "label", GUILayout.ExpandWidth(false)))
                                     {
                                         //RemoveItem(i);
@@ -463,13 +498,23 @@ namespace UnityEditor.Localizations
                                         //i--;
                                         ShowIndex(item, -1);
                                         continue;
-                                    }
+                                    }*/
+                                    if (GUILayout.Button("<", "label", GUILayout.ExpandWidth(false)))
+                                    {
 
+                                        if (itemIndex > 0)
+                                        {
+                                            changeItemIndex = itemIndex;
+                                            //index--;
+                                            newItemIndex = 0;
+                                            EditorLocalizationUtility.FirstLang = item.lang;
+                                        }
+                                    }
                                     GUIStyle style = new GUIStyle("label");
                                     style.alignment = TextAnchor.MiddleCenter;
-                                    if (GUILayout.Button(allLangNames[selectedIndex], style))
+                                    if (GUILayout.Button(item.lang, style))
                                     {
-                                        EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(allLangPaths[selectedIndex]));
+                                        EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(item.path));
                                     }
 
 
@@ -487,7 +532,7 @@ namespace UnityEditor.Localizations
                                                 {
                                                     list.Add(new TranslateItem() { itemData = item, key = key });
                                                 }
-                                                Translate(baseData, list);
+                                                Translate(baseData, list, false);
                                             }
                                         }
 
@@ -515,6 +560,17 @@ namespace UnityEditor.Localizations
                                             }
                                         }
                                     }
+                                    /*
+                                    if (GUILayout.Button(">", "label", GUILayout.ExpandWidth(false)))
+                                    {
+                                        int index = itemDatas.IndexOf(item);
+                                        if (index < itemDatas.Count - 1)
+                                        {
+                                            index++;
+                                            itemDatas.Remove(item);
+                                            itemDatas.Insert(index, item);
+                                        }
+                                    }*/
                                 }
 
                                 if (!string.IsNullOrEmpty(item.loadError))
@@ -630,60 +686,87 @@ namespace UnityEditor.Localizations
                                     }
                                 }
                             }
+                            itemIndex++;
+                        }
+
+                        if (changeItemIndex >= 0)
+                        {
+                            var item = itemDatas[changeItemIndex];
+                            itemDatas.Remove(item);
+                            itemDatas.Insert(newItemIndex, item);
+                            RefreshItems();
                         }
 
 
                         using (new GUILayout.HorizontalScope(GUILayout.Width(itemWidth)))
                         {
-                            int[] indexs = new int[allLangPaths.Length];
-                            for (int i = 0; i < allLangPaths.Length; i++)
-                            {
-                                indexs[i] = i;
-                            }
-                            indexs = indexs.Where((o) => !IsShowWithPath(allLangPaths[o])).ToArray();
+                            List<string> list = new List<string>();
+                            list.Add(Menu_New);
+                            //list.Add(Menu_All);
+                            //foreach (var item in allLangPaths)
+                            //{
+                            //    list.Add(item.lang);
+                            //}
+
                             int selectedIndex = -1;
-                            selectedIndex = EditorGUILayout.Popup(GUIContent.none, selectedIndex,
-                                indexs.Select(o => allLangNames[o]).ToArray(),
-                                GUILayout.Width(80));
+                            selectedIndex = EditorGUILayout.Popup(GUIContent.none, selectedIndex, list.ToArray(), GUILayout.Width(80));
 
                             if (selectedIndex != -1)
                             {
-                                //AddItem();
-                                ShowIndex(itemDatas[indexs[selectedIndex]], GetShowCount());
-                            }
-
-                            if (GUILayout.Button("Create New".Localization(), GUILayout.ExpandWidth(false)))
-                            {
-                                string dir = "Assets";
-                                if (!string.IsNullOrEmpty(baseData.path))
+                                switch (list[selectedIndex])
                                 {
-                                    dir = Path.GetDirectoryName(baseData.path);
-                                }
+                                    case Menu_New:
+                                        NewItem();
+                                        break;
+                                    case Menu_All:
 
-                                string path = EditorUtility.SaveFilePanel("Create New Localization".Localization(), dir, "", Localization.ExtensionName);
-                                if (!string.IsNullOrEmpty(path))
-                                {
-                                    string tmp;
-                                    if (path.ToRelativePath(".", out tmp))
-                                    {
-                                        path = tmp;
-                                    }
-                                    path = CreateNewFile(path);
-                                    dir = Path.GetDirectoryName(path);
-                                    if (allLangNames.Length == 0)
-                                    {
-                                        SelectBase(dir);
-                                    }
-                                    ShowIndex(AddItem(path), GetShowCount());
-
+                                        break;
+                                    default:
+                                        //AddItem();
+                                        //ShowIndex(itemDatas[indexs[selectedIndex]], GetShowCount());
+                                        break;
                                 }
                             }
+
+                            //if (GUILayout.Button("Create New".Localization(), GUILayout.ExpandWidth(false)))
+                            //{
+
+                            //}
                         }
                     }
 
                 }
             }
         }
+
+
+        void NewItem()
+        {
+            string dir = "Assets";
+            if (!string.IsNullOrEmpty(baseData.path))
+            {
+                dir = Path.GetDirectoryName(baseData.path);
+            }
+
+            string path = EditorUtility.SaveFilePanel("Create New Localization".Localization(), dir, "", Localization.ExtensionName);
+            if (!string.IsNullOrEmpty(path))
+            {
+                string tmp;
+                if (path.ToRelativePath(".", out tmp))
+                {
+                    path = tmp;
+                }
+                path = CreateNewFile(path);
+                dir = Path.GetDirectoryName(path);
+                if (itemDatas.Count == 0)
+                {
+                    SelectBase(dir);
+                }
+                ShowIndex(AddItem(path), GetShowCount());
+                RefreshItems();
+            }
+        }
+
         class TranslateItem
         {
             public ItemData itemData;
@@ -694,25 +777,25 @@ namespace UnityEditor.Localizations
         bool isTranslateDone;
         int translateChanged;
         bool translateCanceled;
-        void Translate(ItemData baseData, List<TranslateItem> items)
-        { 
-            EditorCoroutineUtility.StartCoroutine(_Translate(baseData, items), this);
+        void Translate(ItemData baseData, List<TranslateItem> items, bool force)
+        {
+            EditorCoroutineUtility.StartCoroutine(_Translate(baseData, items, force), this);
         }
-        IEnumerator _Translate(ItemData baseData, List<TranslateItem> items)
-        { 
+        IEnumerator _Translate(ItemData baseData, List<TranslateItem> items, bool force)
+        {
             int total = items.Count;
             if (total == 0)
             {
                 yield break;
             }
-             
+
             HashSet<ItemData> changeds = new HashSet<ItemData>();
             translateCurrent = 0;
             isTranslateDone = false;
             translateChanged = 0;
             translateCanceled = false;
-            EditorCoroutineUtility.StartCoroutine(TranslateRunner(baseData, items, changeds), this);
-             
+            EditorCoroutineUtility.StartCoroutine(TranslateRunner(baseData, items, changeds, force), this);
+
             while (!isTranslateDone)
             {
                 var item = items[translateCurrent];
@@ -734,7 +817,7 @@ namespace UnityEditor.Localizations
             Debug.Log($"Translate complete total: {total}, chagned: {translateChanged}");
         }
 
-        IEnumerator TranslateRunner(ItemData baseData, List<TranslateItem> items, HashSet<ItemData> changeds)
+        IEnumerator TranslateRunner(ItemData baseData, List<TranslateItem> items, HashSet<ItemData> changeds, bool force)
         {
             try
             {
@@ -750,13 +833,17 @@ namespace UnityEditor.Localizations
                         continue;
                     }
 
-                    if (!item.itemData.values.ContainsKey(item.key))
-                    {
-                        continue;
-                    }
+                   
                     string srcText = (string)baseData.values[item.key].Value;
-                    var value = item.itemData.values[item.key];
-
+                    LocalizationValue value = default;
+                    if (!item.itemData.values.TryGetValue(item.key, out value))
+                    {
+                        if (!force)
+                        {
+                            continue;
+                        }
+                        value.TypeName = baseData.values[item.key].TypeName;
+                    }
 
                     ILanguageTranslator translator = EditorLocalizationUtility.GetLanguageTranslator(baseData.lang, item.itemData.lang);
                     if (translator == null)
@@ -802,7 +889,7 @@ namespace UnityEditor.Localizations
             using (new GUILayout.HorizontalScope())
             {
                 GUILayout.Label($"{"Current".Localization()}[{Localization.CurrentLang}] {"Selected".Localization()} ", GUILayout.ExpandWidth(false));
-
+                var allLangNames = itemDatas.Select(_ => _.lang).OrderBy(_ => _).ToArray();
                 PopupLang(allLangNames, expandWidth: false);
 
                 GUILayout.Label($"{"Default".Localization()}[{Localization.DefaultLang}] {"CurrentUICulture".Localization()}[{Thread.CurrentThread.CurrentUICulture.Name}] {"CurrentCulture".Localization()}[{Thread.CurrentThread.CurrentCulture.Name}] {"systemLanguage".Localization()}[{Application.systemLanguage}]");
@@ -812,15 +899,17 @@ namespace UnityEditor.Localizations
         void GUIBase()
         {
             int selectedBaseIndex;
-
-            selectedBaseIndex = FindIndexWithPath(baseData.path);
-            int newIndex = EditorGUILayout.Popup(GUIContent.none, selectedBaseIndex, allLangNames, GUILayout.MaxWidth(EditorGUIUtility.labelWidth));
+            var allLangNames = itemDatas.OrderBy(_ => _.lang).ToList();
+            selectedBaseIndex = allLangNames.FindIndex(_ => _.path == baseData.path);
+            int newIndex = EditorGUILayout.Popup(GUIContent.none, selectedBaseIndex, allLangNames.Select(_ => _.lang).ToArray(), GUILayout.MaxWidth(EditorGUIUtility.labelWidth));
             if (newIndex != selectedBaseIndex)
             {
                 selectedBaseIndex = newIndex;
                 if (selectedBaseIndex != -1)
                 {
-                    LoadBase(allLangPaths[selectedBaseIndex]);
+                    string path = allLangNames[selectedBaseIndex].path;
+                    EditorLocalizationUtility.BaseLang = Localization.ParseLangNameByFileName(path);
+                    LoadBase(path);
                 }
             }
         }
@@ -916,6 +1005,30 @@ namespace UnityEditor.Localizations
                                 menu.AddDisabledItem(new GUIContent("Delete".Localization()), false);
                             }
 
+                            menu.AddItem(new GUIContent("Translate".Localization()), false, () =>
+                            {
+                                List<TranslateItem> list = new List<TranslateItem>();
+                                foreach (var itemData in itemDatas)
+                                {
+                                    if (itemData.lang != baseData.lang)
+                                    {
+                                        list.Add(new TranslateItem() { itemData = itemData, key = key });
+                                    }
+                                }
+                                Translate(baseData, list, false);
+                            });
+                            menu.AddItem(new GUIContent("Translate All".Localization()), false, () =>
+                            {
+                                List<TranslateItem> list = new List<TranslateItem>();
+                                foreach (var itemData in itemDatas)
+                                {
+                                    if (itemData.lang != baseData.lang)
+                                    {
+                                        list.Add(new TranslateItem() { itemData = itemData, key = key });
+                                    }
+                                }
+                                Translate(baseData, list, true);
+                            });
                             menu.ShowAsContext();
                             GUIUtility.keyboardControl = 0;
                             GUI.changed = oldChanged;
@@ -993,19 +1106,6 @@ namespace UnityEditor.Localizations
                             //}
                         }
 
-                        if (GUILayout.Button("T", TranslateButtonStyle, GUILayout.ExpandWidth(false)))
-                        {
-
-                            List<TranslateItem> list = new List<TranslateItem>();
-                            foreach (var itemData in itemDatas)
-                            {
-                                if (itemData.lang != baseData.lang)
-                                {
-                                    list.Add(new TranslateItem() { itemData = itemData, key = key });
-                                }
-                            }
-                            Translate(baseData, list);
-                        }
 
 
                         Rect labelRect = GUILayoutUtility.GetLastRect();
@@ -1062,7 +1162,7 @@ namespace UnityEditor.Localizations
                     if (GUILayout.Button("T", TranslateButtonStyle, GUILayout.ExpandWidth(false)))
                     {
 
-                        Translate(baseData, new List<TranslateItem>() { new TranslateItem() { itemData = item, key = key } });
+                        Translate(baseData, new List<TranslateItem>() { new TranslateItem() { itemData = item, key = key } }, false);
 
                         //EditorUtility.DisplayProgressBar("Translate", "", 0f);
 
@@ -1129,12 +1229,15 @@ namespace UnityEditor.Localizations
         [Serializable]
         class ItemData
         {
-            public string path;
             public string lang;
+            public string path;
             [NonSerialized]
             public Dictionary<string, LocalizationValue> values;
             public string loadError;
             public int displayIndex = -1;
+            [NonSerialized]
+            public bool isLoaded;
+            public bool isShow;
             public ItemData()
             {
                 values = new Dictionary<string, LocalizationValue>();
@@ -1144,7 +1247,8 @@ namespace UnityEditor.Localizations
             {
                 values.Clear();
                 loadError = null;
-                lang = null;
+                isLoaded = false;
+
                 if (string.IsNullOrEmpty(path))
                     return;
 
@@ -1154,12 +1258,13 @@ namespace UnityEditor.Localizations
                 try
                 {
                     Localization.LoadFromFile(path, values);
+                    isLoaded = true;
                 }
                 catch (Exception ex)
                 {
                     loadError = ex.Message;
                 }
-
+                /*
                 string filename = Path.GetFileName(path);
                 if (path.EndsWith("." + Localization.ExtensionName, StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -1168,13 +1273,18 @@ namespace UnityEditor.Localizations
                 else
                 {
                     lang = Path.GetFileNameWithoutExtension(filename);
-                }
-
+                }*/
+                lang = Localization.ParseLangNameByFileName(path);
             }
             public void Save()
             {
                 Localization.SaveToXml(path, values);
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            }
+
+            public override string ToString()
+            {
+                return $"{lang}";
             }
         }
 
