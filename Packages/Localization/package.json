@@ -12,7 +12,8 @@
   "description": "Localization, Multi Language",
   "hideInEditor": false,
   "dependencies": {
-    "com.unity.settings": "0.0.7",
+    "unity.settings": "0.0.7",
+    "unity.serialization": "0.0.1",
     "com.unity.editorcoroutines": "1.0.0"
   }
 }
