@@ -204,7 +204,17 @@ namespace UnityEngine.Localizations
             }
             return value.StringValue;
         }
-
+        public bool TryGetString(string key, out string str)
+        {
+            LocalizationValue value;
+            if (!TryGetValue(key, out value))
+            {
+                str = key;
+                return false;
+            }
+            str = value.StringValue;
+            return true;
+        }
         public Texture2D GetTexture2D(string key)
         {
             return GetValue(key).Value as Texture2D;

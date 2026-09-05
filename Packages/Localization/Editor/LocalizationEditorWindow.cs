@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Xml;
+using TextMateSharp.Internal.Parser;
 using Unity.EditorCoroutines.Editor;
 using UnityEngine;
 using UnityEngine.Localizations;
@@ -833,7 +834,7 @@ namespace UnityEditor.Localizations
                         continue;
                     }
 
-                   
+
                     string srcText = (string)baseData.values[item.key].Value;
                     LocalizationValue value = default;
                     if (!item.itemData.values.TryGetValue(item.key, out value))
@@ -1082,14 +1083,29 @@ namespace UnityEditor.Localizations
                                            }
                                        }
                                    }*/
+                                
                                 if (baseData.values.ContainsKey(key) && !baseData.values.ContainsKey(newKey))
                                 {
-                                    baseData.values[newKey] = baseData.values[key];
-                                    baseData.values.Remove(key);
-                                    DiryBaseData();
-
+                                    foreach (var itemData in itemDatas)
+                                    {
+                                        if (itemData.values.ContainsKey(key) && !itemData.values.ContainsKey(newKey))
+                                        {
+                                            itemData.values[newKey] = itemData.values[key];
+                                            itemData.values.Remove(key);
+                                            DirtyData(itemData);
+                                        }
+                                    }
                                     GUIUtility.keyboardControl = 0;
                                 }
+
+                                //if (baseData.values.ContainsKey(key) && !baseData.values.ContainsKey(newKey))
+                                //{
+                                //    baseData.values[newKey] = baseData.values[key];
+                                //    baseData.values.Remove(key);
+                                //    DiryBaseData();
+
+                                //    GUIUtility.keyboardControl = 0;
+                                //}
 
                                 //if (isBaseEditing)
                                 //{

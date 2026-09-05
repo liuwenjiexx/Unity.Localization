@@ -654,7 +654,15 @@ namespace UnityEngine.Localizations
                 return key;
             return Current.GetString(key);
         }
-
+        public static bool TryGetString(string key,out string str)
+        {
+            if (!IsInitialized)
+            {
+                str = key;
+                return false;
+            }
+            return Current.TryGetString(key,out str);
+        }
 
 
         public static bool IsLocalizationFile(string file)
