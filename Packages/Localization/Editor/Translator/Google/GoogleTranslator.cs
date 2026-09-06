@@ -106,10 +106,10 @@ static void EditorStartCoroutine(IEnumerator coroutine)
             if (string.IsNullOrEmpty(sourceLang))
                 sourceLang = "auto";
             string url;
-            int version = 1;
+            var version = GoogleTranslatorSettings.ApiVersion;
             switch (version)
             {
-                case 1:
+                case  GoogleTranslatorApiVersion.V1:
                     //HTTP/1.1 429 Too Many Requests
                     url = "https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl="
                         + sourceLang + "&tl=" + targetLang + "&dt=t&q=" + UnityWebRequest.EscapeURL(sourceText);
@@ -148,7 +148,7 @@ static void EditorStartCoroutine(IEnumerator coroutine)
                 try
                 {
                     var N = JSONNode.Parse(resp);
-                    if (version == 1)
+                    if (version == GoogleTranslatorApiVersion.V1)
                     {
                         result = N[0];
                     }

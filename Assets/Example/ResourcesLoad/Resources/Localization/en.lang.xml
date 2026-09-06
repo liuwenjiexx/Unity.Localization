@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <localization xmlns="urn:schema-localization">
   <string key="Hello World">Hello World</string>
-  <string key="Language">Language</string>
+  <string key="Language">language</string>
   <string key="Source13311">Resources-en</string>
   <string key="test">test-1en1</string>
 </localization>

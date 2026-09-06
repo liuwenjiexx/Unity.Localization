@@ -56,6 +56,7 @@ namespace UnityEditor.Localizations
         private string langDir;
         private int listDataVersion;
         private int cacheListDataVersion;
+        private int cacheSaveDataVersion;
         private ListView listView;
         VisualElement listHeaderContainer;
         List<VisualElement> addedListHeaders = new();
@@ -182,8 +183,8 @@ namespace UnityEditor.Localizations
 
                     newKey = null;
                     newKeyField.SetValueWithoutNotify(null);
-                    activeFile.SaveIfChagne();
-                    RefreshList();
+                    //activeFile.SaveIfChagne();
+                    //RefreshList();
                 }
             });
 
@@ -241,10 +242,11 @@ namespace UnityEditor.Localizations
                 label = new Label();
                 label.name = "value";
                 label.AddToClassList("lang-key-label");
-                label.RegisterCallback<PointerUpEvent>(e =>
+                label.RegisterCallback<ClickEvent>(e =>
                 {
                     var key = view.userData as string;
-                    if (e.button == 0)
+
+                    if (e.clickCount > 1)
                     {
                         EditKey(key);
                     }
@@ -295,26 +297,28 @@ namespace UnityEditor.Localizations
                 view.AddManipulator(new ContextualMenuManipulator(build =>
                 {
                     string key = view.userData as string;
-
-                    build.menu.AppendAction("Translate All".Localization(), (act) =>
+                    using (EditorLocalizationUtility.EditorLocalizationValues.BeginScope())
                     {
-                        List<TranslateItem> list = new List<TranslateItem>();
-                        foreach (var file in files)
+                        build.menu.AppendAction("Translate".Localization(), (act) =>
                         {
-                            if (file.lang != ActiveFile.lang)
+                            List<TranslateItem> list = new List<TranslateItem>();
+                            foreach (var file in files)
                             {
-                                list.Add(new TranslateItem() { file = file, key = key });
+                                if (file.lang != ActiveFile.lang)
+                                {
+                                    list.Add(new TranslateItem() { file = file, key = key });
+                                }
                             }
-                        }
-                        Translate(ActiveFile, list, false);
-                    });
+                            Translate(ActiveFile, list, false);
+                        });
 
 
-                    build.menu.AppendAction("Delete".Localization(), act =>
-                    {
-                        //Debug.Log("Delete " + key);
-                        DeleteKey(key);
-                    });
+                        build.menu.AppendAction("Delete".Localization(), act =>
+                        {
+                            //Debug.Log("Delete " + key);
+                            DeleteKey(key);
+                        });
+                    }
                 }));
 
                 return view;
@@ -408,9 +412,9 @@ namespace UnityEditor.Localizations
                         label = new Label();
                         label.AddToClassList("lang-value-label");
 
-                        label.RegisterCallback<PointerDownEvent>(e =>
+                        label.RegisterCallback<ClickEvent>(e =>
                         {
-                            if (e.button == 0)
+                            if (e.clickCount > 1)
                             {
                                 EditValue(index, key, fileIndex);
                             }
@@ -473,16 +477,25 @@ namespace UnityEditor.Localizations
                         {
                             valueEle.AddManipulator(new ContextualMenuManipulator(build =>
                             {
-                                build.menu.AppendAction("Translate".Localization() + $"[{file.lang}]", (act) =>
+                                using (EditorLocalizationUtility.EditorLocalizationValues.BeginScope())
                                 {
-                                    List<TranslateItem> list = new List<TranslateItem>();
-
-                                    if (file.lang != ActiveFile.lang)
+                                    build.menu.AppendAction("Translate".Localization() + $" [{ActiveFile.lang} => {file.lang}]", (act) =>
                                     {
-                                        list.Add(new TranslateItem() { file = file, key = key });
-                                    }
-                                    Translate(ActiveFile, list, false);
-                                });
+                                        List<TranslateItem> list = new List<TranslateItem>();
+
+                                        if (file.lang != ActiveFile.lang)
+                                        {
+                                            list.Add(new TranslateItem() { file = file, key = key });
+                                        }
+                                        Translate(ActiveFile, list, false);
+                                    });
+                                    /*
+                                    build.menu.AppendAction("Refresh".Localization() + $" [{file.lang}]", (act) =>
+                                    {
+                                        RefreshList();
+                                    });
+                                    */
+                                }
                             }));
                         }
 
@@ -503,13 +516,13 @@ namespace UnityEditor.Localizations
                     valueEle.RemoveFromClassList("lang-value-inherit");
 
                     isMissingKey = false;
-                    inheritValue = !file.values.ContainsKey(key);
+                    inheritValue = !file.HasKey(key);
                     if (isEdit)
                     {
                         textField.SetValueWithoutNotify(editValue);
                     }
                     labelField.text = null;
-                    if (file.values.TryGetValue(key, out value))
+                    if (file.TryGetValue(key, out value))
                     {
                         //if (isEdit)
                         //    textField.SetValueWithoutNotify(value.StringValue);
@@ -746,7 +759,7 @@ namespace UnityEditor.Localizations
 
         void Refresh()
         {
-            if (langStatusLabel == null) return;
+            if (langStatusLabel == null || files == null) return;
             langStatusLabel.text = GetLangStatusText();
             var allLangNames = files.Select(_ => _.lang).OrderBy(_ => _).ToArray();
             selectedLangField.choices.Clear();
@@ -763,7 +776,7 @@ namespace UnityEditor.Localizations
             newValueTypeField.text = newValueTypeName;
 
 
-            RefreshList();
+            //RefreshList();
         }
 
         public bool IsLoadedFile(string path)
@@ -980,7 +993,7 @@ namespace UnityEditor.Localizations
         void RefreshList()
         {
             if (listView == null) return;
-            cacheListDataVersion = listDataVersion;
+            cacheListDataVersion = GetListDataVersion();
 
             keySet.Clear();
             keyList.Clear();
@@ -1031,7 +1044,7 @@ namespace UnityEditor.Localizations
                         {
                             SortFileIndex();
 
-                            RefreshList();
+                            //RefreshList();
                         });
 
                         build.menu.AppendAction("Fixed", act =>
@@ -1379,11 +1392,12 @@ namespace UnityEditor.Localizations
                     yield return null;
                 }
 
+                //SaveIfChange();
 
-                if (SaveIfChange())
-                {
-                    RefreshList();
-                }
+                //if (SaveIfChange())
+                //{
+                //    RefreshList();
+                //}
             }
             finally
             {
@@ -1436,8 +1450,8 @@ namespace UnityEditor.Localizations
                         Debug.Log($"Translate [{translator.GetType().Name}] [{baseData.lang}] => [{item.file.lang}]\n" + srcText + "\nResult\n" + result);
                         if (!string.IsNullOrEmpty(result) && !object.Equals(value.Value, result))
                         {
-                            value.Value = result;
-                            item.file[item.key] = value;
+                            var newValue = new LocalizationValue(value.TypeName, result);
+                            item.file[item.key] = newValue;
                             translateChanged++;
                             //if (!changeds.Contains(item.itemData))
                             //    changeds.Add(item.itemData);
@@ -1478,7 +1492,7 @@ namespace UnityEditor.Localizations
         static bool OnOpenAsset(int instanceID, int line)
         {
             string assetPath;
-             
+
             assetPath = AssetDatabase.GetAssetPath(instanceID);
             if (!string.IsNullOrEmpty(assetPath))
             {
@@ -1497,7 +1511,7 @@ namespace UnityEditor.Localizations
                     }
                     if (!win.IsShowWithPath(assetPath))
                         win.ShowIndex(item, win.GetShowCount());
-                     
+
                     return true;
                 }
             }
@@ -1558,6 +1572,7 @@ namespace UnityEditor.Localizations
 
         public bool SaveIfChange()
         {
+            cacheSaveDataVersion = GetListDataVersion();
             bool chagned = false;
             foreach (var itemData in files)
             {
@@ -1608,7 +1623,6 @@ namespace UnityEditor.Localizations
         }
         */
 
-        private int cacheFileVersion;
 
         private void Update()
         {
@@ -1649,7 +1663,20 @@ namespace UnityEditor.Localizations
             }
 
 
-            listDataVersion = 0;
+            listDataVersion = GetListDataVersion();
+            if (cacheSaveDataVersion != listDataVersion)
+            {
+                SaveIfChange();
+            }
+            if (cacheListDataVersion != listDataVersion)
+            {
+                RefreshList();
+            }
+        }
+
+        int GetListDataVersion()
+        {
+            var listDataVersion = 0;
             foreach (var item in files)
             {
                 if (item.isLoaded)
@@ -1664,10 +1691,7 @@ namespace UnityEditor.Localizations
                     }
                 }
             }
-            if (cacheListDataVersion != listDataVersion)
-            {
-                RefreshList();
-            }
+            return listDataVersion;
         }
 
 

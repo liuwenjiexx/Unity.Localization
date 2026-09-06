@@ -51,6 +51,11 @@ namespace UnityEditor.Localizations
 
             });
             loaderTypeField.SetValueWithoutNotify(LocalizationSettings.CustomLoaderTypeName);
+
+
+
+            EditorSettingsUtility.CreateSettingView(windowContent, typeof(GoogleTranslatorSettings));
+
         }
     }
 }
