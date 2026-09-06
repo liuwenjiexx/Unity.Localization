@@ -25,6 +25,8 @@ namespace UnityEditor.Localizations
         private static LocalizationValues editorLocalizationValues;
         public const string KeyPrefix = XMLNS + ".";
 
+        public const string DefaultValueTypeName = "string";
+
         public static string PackageDir
         {
             get
@@ -85,7 +87,7 @@ namespace UnityEditor.Localizations
         {
             get
             {
-               return EditorPrefs.GetString(KEY_BASE_LANG, "en");
+                return EditorPrefs.GetString(KEY_BASE_LANG, "en");
             }
             set
             {
@@ -130,7 +132,7 @@ namespace UnityEditor.Localizations
         {
             return GetValueDrawers().Select(o => o.Key)
              .OrderBy(o => o)
-             .OrderBy(o => o == "string" ? 0 : 1);
+             .OrderBy(o => o == DefaultValueTypeName ? 0 : 1);
         }
 
 

@@ -590,6 +590,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   key: Hello World
   format: 
+  rebuildLayout: 0
 --- !u!222 &466338870
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -853,14 +854,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705507993}
   m_Enabled: 1
-  serializedVersion: 11
+  serializedVersion: 12
   m_Type: 1
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
-  m_CookieSize: 10
+  m_CookieSize2D: {x: 10, y: 10}
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
@@ -977,6 +978,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   key: Language
   format: 
+  rebuildLayout: 0
 --- !u!114 &752780415
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1010,7 +1012,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u8A9E\u8A00"
+  m_Text: "\u8BED\u8A00"
 --- !u!222 &752780416
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1430,6 +1432,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   key: Missing
   format: 
+  rebuildLayout: 0
 --- !u!222 &1116196055
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1806,7 +1809,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Custom-zh-TW
+  m_Text: Source
 --- !u!114 &1363320448
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1821,6 +1824,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   key: Source
   format: 
+  rebuildLayout: 0
 --- !u!222 &1363320449
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2049,8 +2053,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 333, y: -291.94498}
-  m_SizeDelta: {x: 310, y: 30}
+  m_AnchoredPosition: {x: 960, y: -560.44507}
+  m_SizeDelta: {x: 0, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1624919721
 MonoBehaviour:
@@ -2178,7 +2182,7 @@ LightingSettings:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Settings.lighting
-  serializedVersion: 9
+  serializedVersion: 10
   m_EnableBakedLightmaps: 1
   m_EnableRealtimeLightmaps: 0
   m_RealtimeEnvironmentLighting: 1
@@ -2193,6 +2197,12 @@ LightingSettings:
   m_BakeResolution: 40
   m_Padding: 2
   m_LightmapCompression: 3
+  m_LightmapPackingMode: 1
+  m_LightmapPackingMethod: 0
+  m_XAtlasPackingAttempts: 16384
+  m_XAtlasBruteForce: 0
+  m_XAtlasBlockAlign: 0
+  m_XAtlasRepackUnderutilizedLightmaps: 1
   m_AO: 0
   m_AOMaxDistance: 1
   m_CompAOExponent: 1
@@ -2434,8 +2444,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 333, y: -210.16498}
-  m_SizeDelta: {x: 310, y: 30}
+  m_AnchoredPosition: {x: 960, y: -478.66504}
+  m_SizeDelta: {x: 0, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1774977459
 MonoBehaviour:
@@ -2782,8 +2792,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 333, y: -251.05498}
-  m_SizeDelta: {x: 310, y: 30}
+  m_AnchoredPosition: {x: 960, y: -519.55505}
+  m_SizeDelta: {x: 0, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2034478519
 MonoBehaviour:
@@ -3040,7 +3050,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7347244669786836350, guid: 7eee4977f4225b740a1f4e38ce97c62f, type: 3}
       propertyPath: m_Text
-      value: "\u8A9E\u8A00"
+      value: "\u8BED\u8A00"
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

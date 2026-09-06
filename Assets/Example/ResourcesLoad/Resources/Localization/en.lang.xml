@@ -2,5 +2,6 @@
 <localization xmlns="urn:schema-localization">
   <string key="Hello World">Hello World</string>
   <string key="Language">Language</string>
-  <string key="Source">Resources-en</string>
+  <string key="Source13311">Resources-en</string>
+  <string key="test">test-1en1</string>
 </localization>

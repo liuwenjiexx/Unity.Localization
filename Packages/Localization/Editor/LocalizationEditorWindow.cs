@@ -66,11 +66,11 @@ namespace UnityEditor.Localizations
         }
 
 
-        [MenuItem(EditorLocalizationUtility.MenuPrefix + "Localization", priority = EditorLocalizationUtility.MenuPriority)]
-        public static void Show_Menu()
-        {
-            GetWindow<LocalizationEditorWindow>().Show();
-        }
+        //[MenuItem(EditorLocalizationUtility.MenuPrefix + "Localization2", priority = EditorLocalizationUtility.MenuPriority)]
+        //public static void Show_Menu()
+        //{
+        //    GetWindow<LocalizationEditorWindow>().Show();
+        //}
 
         public bool HasItem(string path)
         {
@@ -1213,7 +1213,7 @@ namespace UnityEditor.Localizations
             }
         }
 
-
+        /*
         [UnityEditor.Callbacks.OnOpenAsset(-1)]
         static bool OnOpenAsset(int instanceID, int line)
         {
@@ -1241,7 +1241,7 @@ namespace UnityEditor.Localizations
             }
             return false;
         }
-
+        */
         [Serializable]
         class ItemData
         {

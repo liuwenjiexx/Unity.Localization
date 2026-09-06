@@ -1,10 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace UnityEngine.Localizations
 {
-    public struct LocalizationValue
+    public struct LocalizationValue : IEquatable<LocalizationValue>
     {
         public LocalizationValue(string typeName, object value)
         {
@@ -43,11 +44,38 @@ namespace UnityEngine.Localizations
             return new LocalizationValue() { TypeName = TypeName, Value = Value, StringValue = StringValue };
         }
 
+
+        public bool Equals(LocalizationValue other)
+        {
+            return StringValue == other.StringValue &&
+                object.Equals(Value, other.Value) &&
+                TypeName == other.TypeName;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is LocalizationValue other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(StringValue, Value, TypeName);
+        }
+
         public override string ToString()
         {
             if (Value == null)
                 return string.Empty;
             return Value.ToString();
+        }
+        public static bool operator ==(LocalizationValue a, LocalizationValue b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(LocalizationValue a, LocalizationValue b)
+        {
+            return !a.Equals(b);
         }
     }
 

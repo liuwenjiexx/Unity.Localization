@@ -1,0 +1,117 @@
+VisualElement {
+}
+
+.list {
+    flex-grow: 1;
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 5px;
+    margin-left: 0;
+}
+
+.list .list-header-container {
+    flex-grow: 0;
+    flex-direction: row;
+    height: 20px;
+    border-left-color: rgba(0, 0, 0, 0.29);
+    border-right-color: rgba(0, 0, 0, 0.29);
+    border-top-color: rgba(0, 0, 0, 0.29);
+    border-bottom-color: rgba(0, 0, 0, 0.29);
+    border-bottom-width: 1px;
+}
+
+.list .list-header {
+    flex-grow: 0;
+    flex-direction: row;
+    width: 120px;
+    justify-content: space-around;
+    align-items: center;
+    align-self: center;
+    height: 100%;
+    border-left-color: rgba(0, 0, 0, 0.396);
+    border-right-color: rgba(0, 0, 0, 0.396);
+    border-top-color: rgba(0, 0, 0, 0.396);
+    border-bottom-color: rgba(0, 0, 0, 0.396);
+    border-right-width: 1px;
+}
+
+.list .list-header-label {
+    -unity-text-align: upper-center;
+    flex-grow: 1;
+}
+
+.list .list-header-key {
+    width: 130px;
+}
+
+.list .list-header-fixed {
+    font-size: 7px;
+    color: rgba(39, 122, 220, 0.459);
+    margin-left: 2px;
+}
+
+.list ListView {
+    flex-grow: 1;
+}
+
+#search {
+    width: 200px;
+}
+
+#new_key {
+    max-width: 200px;
+}
+
+.list-item {
+    flex-direction: row;
+    overflow: hidden;
+    align-items: center;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-right: 2px;
+    margin-left: 2px;
+}
+
+.list-item .lang-key {
+    width: 130px;
+}
+
+.list-item .lang-value {
+    flex-direction: row;
+    width: 120px;
+}
+
+.list-item .lang-key * {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.list-item .lang-value > * {
+    flex-grow: 1;
+    flex-shrink: 2;
+    overflow: hidden;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.list-item .lang-value #label {
+    flex-shrink: 2;
+    margin-right: 5px;
+    margin-left: 5px;
+}
+
+.list-item .lang-value-inherit .lang-value-label {
+    color: rgb(141, 141, 141);
+}
+
+.list-item .lang-value-missing-key .lang-value-label {
+    color: rgb(255, 0, 0);
+}
+
+.status-bar {
+    background-color: rgba(0, 0, 0, 0.255);
+}
+
+.list-item .missing-key .lang-key-label {
+    color: rgb(255, 0, 0);
+}
